@@ -4,6 +4,18 @@ format: html
 editor: visual
 ---
 
+## 2026  Jun.17
+
+-   Downloaded files from Dropbox. In most of the case, one single owl occupied the same single site. There are cases that multiple owls can be detected in the same site, or one owl got detected in multiple sites.
+
+-   Extracted audio from video
+
+-   Next:
+
+    -   extract date and time from video (shown in the filename?)
+
+    -   run the audio through BirdNET (GUI) -\> clip the audio to only retain the vocalizing period -\> extract embedding (R? Python?)
+
 ## Quarto
 
 Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
