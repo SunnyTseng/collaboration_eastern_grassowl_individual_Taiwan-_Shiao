@@ -4,7 +4,7 @@ format: html
 editor: visual
 ---
 
-## 2026  Jun.17
+## 2026 Jun.16
 
 -   Downloaded files from Dropbox. In most of the case, one single owl occupied the same single site. There are cases that multiple owls can be detected in the same site, or one owl got detected in multiple sites.
 
@@ -16,23 +16,21 @@ editor: visual
 
     -   run the audio through BirdNET (GUI) -\> clip the audio to only retain the vocalizing period -\> extract embedding (R? Python?)
 
-## Quarto
+## 2026 Jun.17
 
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+-   Set up the for loop for auto extraction of audio and metadata
 
-## Running Code
+-   To do:
 
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+    -   Extract owl ID, and site as two additional columns
 
-```{r}
-1 + 1
-```
+    -   Automate the loop for all the folders - one big metadata
 
-You can add options to executable code like this
+    -   Keep the "audio path" maybe!? for future mapping
 
-```{r}
-#| echo: false
-2 * 2
-```
+## Big Picture
 
-The `echo: false` option disables the printing of code (only output is displayed).
+1.  Extract audio from video, with metadata
+2.  Extract clips of sounds from audio (by BirdNET GUI)
+3.  Extract BirdNET embedding from each vocalization for each owls
+4.  Run multi-variance analysis to see the similarity
