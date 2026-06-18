@@ -28,6 +28,10 @@ editor: visual
 
 -   [x] Keep the "audio path" maybe!? for future mapping
 
+## 2026 Jun.18
+
+-   Finished the "function" extracting audios and metadata from video folders
+
 ## Big Picture
 
 1.  Extract audio from video, with metadata
