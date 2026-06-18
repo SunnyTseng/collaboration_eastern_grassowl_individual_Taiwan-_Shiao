@@ -10,23 +10,23 @@ editor: visual
 
 -   Extracted audio from video
 
--   Next:
+### To do:
 
-    -   extract date and time from video (shown in the filename?)
+-   [x] extract date and time from video (shown in the filename?
 
-    -   run the audio through BirdNET (GUI) -\> clip the audio to only retain the vocalizing period -\> extract embedding (R? Python?)
+-   [ ] run the audio through BirdNET (GUI) -\> clip the audio to only retain the vocalizing period -\> extract embedding (R? Python?)
 
 ## 2026 Jun.17
 
 -   Set up the for loop for auto extraction of audio and metadata
 
--   To do:
+### To do:
 
-    -   Extract owl ID, and site as two additional columns
+-   [x] Extract owl ID, and site as two additional columns
 
-    -   Automate the loop for all the folders - one big metadata
+-   [ ] Automate the loop for all the folders - one big metadata
 
-    -   Keep the "audio path" maybe!? for future mapping
+-   [x] Keep the "audio path" maybe!? for future mapping
 
 ## Big Picture
 
