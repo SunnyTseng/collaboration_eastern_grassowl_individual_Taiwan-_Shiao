@@ -120,9 +120,6 @@ write_csv(metadata_all, here("data", "taiga_audio_metadata_5_owls.csv"))
 
 
 
-
-
-
 # 1. Read your full 1-minute wave file
 wave_obj <- readWave(test)
 
