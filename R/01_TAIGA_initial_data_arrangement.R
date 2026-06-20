@@ -137,21 +137,6 @@ vocalization_clip <- wave_obj[start_sample:end_sample]
 writeWave(vocalization_clip, "D:/2026_eastern_grassowl_Taiwan/prepared_clips/extracted_call.wav")
 
 
-
-
-
-
-
-# run through BirdNET to get the detections -------------------------------
-
-# initializing a BirdNET model
-model <- load_birdnet(type = 'acoustic',
-                      version = '2.4',
-                      backend = 'tf',
-                      precision = 'fp32', # what does this actually mean vs 'fp16' or 'int8'
-                      lang = 'en_us')
-
-
 # specify input audio (top-level folder) with "audio" in the name
 audio_folders <- list.dirs("D:/2026_eastern_grassowl_Taiwan",
                            recursive = FALSE,
@@ -168,14 +153,22 @@ for (audio_folder in audio_folders) {
                       pattern = "\\.wav$",
                       full.names = TRUE,
                       recursive = TRUE)
-
-  predictions <- predict(model, files)
-
-  write_predictions(predictions,
-                    file = here("data", "birdnet_output", paste0(basename(audio_folder), ".csv")),
-                    format = "csv")
-
 }
+
+
+
+
+# run through BirdNET to get the detections -------------------------------
+
+# initializing a BirdNET model
+model <- load_birdnet(type = 'acoustic',
+                      version = '2.4',
+                      backend = 'tf',
+                      precision = 'fp32', # what does this actually mean vs 'fp16' or 'int8'
+                      lang = 'en_us')
+
+
+
 
 
 
