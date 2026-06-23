@@ -16,6 +16,7 @@ library(janitor)
 library(av)
 library(tuneR)
 library(ohun)
+library(warbleR)
 library(tidymedia)
 
 #BirdNET related
@@ -115,6 +116,81 @@ write_csv(metadata_all, here("data", "taiga_audio_metadata_5_owls.csv"))
 
 
 # extract events within the long acoustics - remove silence  --------------
+
+
+
+# template-based detection - might not work, as the owl call can sometimes be two-notes
+# sometimes be four notes. Maybe the energy-based extraction can be a better option
+# Be aware for the duration of the final extraction. Try to make the extracted clip
+# covered by the sounds, but also be about 3, 6, or 9 seconds for birdnet analysis (?)
+
+# load example data
+data("lbh1", "lbh2", "lbh_reference")
+
+# save sound files
+tuneR::writeWave(lbh1, file.path(tempdir(), "lbh1.wav"))
+tuneR::writeWave(lbh2, file.path(tempdir(), "lbh2.wav"))
+
+# select a subset of the data
+lbh1_reference <-
+  lbh_reference[lbh_reference$sound.files == "lbh1.wav",]
+
+# print data
+lbh1_reference
+
+# install this package first if not installed
+# install.packages("Sim.DiffProc")
+
+#Creating vector for duration
+durs <- rep(c(0.3, 1), 5)
+
+set.seed(123)
+freqs <- sample(c(3, 6), 10, replace = TRUE)
+
+
+#Creating simulated song
+set.seed(12)
+simulated_1 <-
+  warbleR::simulate_songs(
+    n = 10,
+    durs = durs,
+    freqs = freqs,
+    sig2 = 0.1,
+    gaps = 0.5,
+    harms = 1,
+    bgn = 0.1,
+    freq.range = 2,
+    path = tempdir(),
+    file.name = "simulated_1",
+    selec.table = TRUE,
+    shape = "cos",
+    fin = 0.3,
+    fout = 0.35,
+    samp.rate = 18
+  )$wave
+
+
+# plot spectrogram and envelope
+label_spectro(wave = simulated_1,
+              env = TRUE,
+              fastdisp = TRUE)
+
+
+# run detection
+detection <-
+  energy_detector(
+    files = "simulated_1.wav",
+    bp = c(2, 8),
+    threshold = 50,
+    smooth = 150,
+    path = tempdir()
+  )
+
+
+
+
+
+
 
 
 
