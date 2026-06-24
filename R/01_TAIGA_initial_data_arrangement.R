@@ -30,8 +30,9 @@ event_detections <- map2_df(audio_data$filepath_audio,
 
 metadata_event_detections <- event_detections %>%
   left_join(audio_data, by = "audio_id") %>%
-  rename(segment_length = duration.x) %>%
-  select(owl_id, site, datetime, audio_id, selec, start, end, segment_length, filepath_audio)
+  rename(clip_length = duration.x) %>%
+  mutate(clip_id = paste0(audio_id, "-", selec)) %>%
+  select(owl_id, site, datetime, selec, start, end, clip_length, filepath_audio, audio_id, clip_id)
 
 write_csv(metadata_event_detections, here("data", "taiga_audio_events_metadata_5_owls.csv"))
 
