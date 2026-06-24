@@ -12,6 +12,8 @@ This project leverages a unique validation dataset collected from automated came
 
 > Because each video provides simultaneous visual confirmation of individual identity (via band numbers) and acoustic recordings of their calls, this dataset serves as an ideal empirical baseline to test vocal individuality.
 
+![](images/clipboard-1687876867.png)
+
 To evaluate the feasibility of acoustic individuality tracking before scaling to a island-wide monitoring network, we established a prototype pipeline using 5 distinct, visually identified owls. If their acoustic features cluster reliably, it confirms that deep-learning feature extraction can be used for passive, non-invasive individual tracking.
 
 ## Functions and packages
@@ -26,8 +28,6 @@ source(here::here("R", "00_functions_packages.R"))
 ## Extract audios from video
 
 ```{r}
-#| cache: TRUE
-
 video_root <- "E:/2026_eastern_grassowl_Taiwan/TAIGA_video"
 
 folder_list <- list.dirs(path = video_root,
@@ -39,16 +39,12 @@ folder_list <- list.dirs(path = video_root,
 ## Check structure
 
 ```{r}
-#| cache: true
-
 dir_tree(video_root, recurse = FALSE)
 ```
 
 ## How many videos
 
 ```{r}
-#| cache: TRUE
-
 video_summary <- tibble(folder_path = folder_list) %>% 
   mutate(folder_name = basename(folder_path),
          total_videos = map_int(folder_path, 
@@ -58,7 +54,7 @@ video_summary <- tibble(folder_path = folder_list) %>%
                                              ignore.case = TRUE) %>% length()})) %>% 
   select(folder_name, total_videos)
 
-knitr::kable(video_summary, col.names = c("Site / Owl Folder", "Total Audio Files (.mp4)"))
+knitr::kable(video_summary, col.names = c("Site / Owl Folder", "Total Video Files (.mp4)"))
 ```
 :::
 
@@ -77,8 +73,11 @@ The `build_audio_metadata()` function gathers and organizes all the technical de
 #| warning: FALSE
 #| cache: TRUE
 
+# this chunk takes about one minute to run
+
 metadata_all <- build_audio_metadata(video_folder = "E:/2026_eastern_grassowl_Taiwan/TAIGA_video",
                                      audio_folder = "E:/2026_eastern_grassowl_Taiwan/TAIGA_audio")
+
 ```
 
 ::: panel-tabset
@@ -154,6 +153,8 @@ The energy detector isolates signals above our threshold within a 1–5 kHz freq
 #| cache: TRUE
 #| message: FALSE
 
+# this chunk takes about 30 secs to run
+
 detection <- energy_detector(files = basename(audio_file),
                              path = dirname(audio_file),
                              bp = c(1, 5),
@@ -177,6 +178,8 @@ Detections were padded to lengths of exact 3-second multiples (3, 6, 9, 12, or 1
 #| cache: TRUE
 #| message: FALSE
 
+# this chunk takes about 30 secs to run
+
 detection_padded <- extract_audio_events(audio_file,
                                          threshold_detection = threshold_detection,
                                          visualize = FALSE)
@@ -191,12 +194,78 @@ label_spectro(wave = sound,
 ```
 :::
 
-## Extracting all
+## Getting detection metadata
+
+Load the audio metadata
 
 ```{r}
-#| cache: true
+#| message: FALSE
+
+audio_data <- read_csv(here("data", "taiga_audio_metadata_5_owls.csv")) 
+```
+
+Loop the extraction function through all the audios and combine the detected results
+
+```{r}
+#| cache: TRUE
+#| message: FALSE
+
+# this chunk takes few minutes (about 10 mins) to run
+
+event_detections <- map2_df(audio_data$filepath_audio,
+                            audio_data$audio_id,
+                            function(path, id) {
+                              extract_audio_events(path, threshold_detection = 20, visualize = FALSE) %>%
+                                as_tibble() %>%
+                                mutate(audio_id = id)})
+
+metadata_event_detections <- event_detections %>%
+  left_join(audio_data, by = "audio_id") %>%
+  rename(clip_length = duration.x) %>%
+  mutate(clip_id = paste0(audio_id, "-", selec)) %>%
+  select(owl_id, site, datetime, selec, start, end, clip_length, filepath_audio, audio_id, clip_id)
+```
+
+Take a peak at the results
+
+::: panel-tabset
+## Check head
+
+```{r}
+head(metadata_event_detections)
+```
+
+## Check columns
+
+```{r}
+metadata_event_detections %>% head (2) %>% glimpse()
+```
+:::
+
+Summarize how many clips are extracted for each of the owl
+
+```{r}
+metadata_event_detections %>%
+  mutate(segment_length = fct_rev(factor(segment_length)))%>%
+  ggplot() +
+  geom_bar(aes(fill = clip_length,
+               x = owl_id),
+           position = "stack",
+           stat = "count") +
+  scale_fill_viridis(discrete = T) +
+  labs(y = "No. of segments",
+       x = "Owl ID",
+       fill = "Length (s)")
 
 
+```
+
+Save this cleaned metadata for later use
+
+```{r}
+#| eval: FALSE
+
+write_csv(metadata_event_detections, here("data", "taiga_audio_events_metadata_5_owls.csv"))
 ```
 
 ### Analytical Workflow
@@ -224,4 +293,3 @@ You can add options to executable code like this
 ```
 
 The `echo: false` option disables the printing of code (only output is displayed).
-

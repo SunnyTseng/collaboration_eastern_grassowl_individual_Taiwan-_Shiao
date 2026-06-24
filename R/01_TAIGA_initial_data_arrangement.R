@@ -2,57 +2,38 @@
 
 # library -----------------------------------------------------------------
 
-
 source(here::here("R", "00_functions_packages.R"))
 
 
 
 # extract audio, datetime from video ------------------------------------------------
 
-
 extract_audio_files(video_folder = "E:/2026_eastern_grassowl_Taiwan/TAIGA_video")
 
 metadata_all <- build_audio_metadata(video_folder = "E:/2026_eastern_grassowl_Taiwan/TAIGA_video",
                                      audio_folder = "E:/2026_eastern_grassowl_Taiwan/TAIGA_audio")
 
-
 write_csv(metadata_all, here("data", "taiga_audio_metadata_5_owls.csv"))
-
-
 
 
 
 # extract events within the long acoustics - remove silence  --------------
 
+audio_data <- read_csv(here("data", "taiga_audio_metadata_5_owls.csv"))
 
+event_detections <- map2_df(audio_data$filepath_audio,
+                            audio_data$audio_id,
+                            function(path, id) {
+                              extract_audio_events(path, threshold_detection = 20, visualize = FALSE) %>%
+                                as_tibble() %>%
+                                mutate(audio_id = id)})
 
-# template-based detection - might not work, as the owl call can sometimes be two-notes
-# sometimes be four notes. Maybe the energy-based extraction can be a better option
-# Be aware for the duration of the final extraction. Try to make the extracted clip
-# covered by the sounds, but also be about 3, 6, or 9 seconds for birdnet analysis (?)
+metadata_event_detections <- event_detections %>%
+  left_join(audio_data, by = "audio_id") %>%
+  rename(segment_length = duration.x) %>%
+  select(owl_id, site, datetime, audio_id, selec, start, end, segment_length, filepath_audio)
 
-audio_data <- read_csv(here("data", "taiga_audio_metadata_5_owls.csv")) %>%
-  mutate(filepath_audio = str_replace(filepath_audio, "^D", "E"))
-
-
-for (audio_file in audio_data$filepath_audio) {
-  detection <- extract_audio_events(audio_file,
-                                    threshold_detection = 20,
-                                    visualize = FALSE)
-
-  if (!exists("all_detections")) {
-    all_detections <- detection
-  } else {
-    all_detections <- bind_rows(all_detections, detection)
-  }
-}
-
-
-
-
-
-
-
+write_csv(metadata_event_detections, here("data", "taiga_audio_events_metadata_5_owls.csv"))
 
 
 
