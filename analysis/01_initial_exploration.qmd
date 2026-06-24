@@ -175,9 +175,10 @@ Detections were padded to lengths of exact 3-second multiples (3, 6, 9, 12, or 1
 
 ```{r}
 #| cache: TRUE
+#| message: FALSE
 
 detection_padded <- extract_audio_events(audio_file,
-                                         threshold_detection = 20,
+                                         threshold_detection = threshold_detection,
                                          visualize = FALSE)
 
 sound <- readWave(audio_file)
@@ -223,3 +224,4 @@ You can add options to executable code like this
 ```
 
 The `echo: false` option disables the printing of code (only output is displayed).
+
