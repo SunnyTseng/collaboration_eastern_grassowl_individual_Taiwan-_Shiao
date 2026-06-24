@@ -121,21 +121,74 @@ Save this cleaned metadata for later use
 write_csv(metadata_all, here("data", "taiga_audio_metadata_5_owls.csv"))
 ```
 
-## Extract events within audio
+## Energy based sound event detection
+
+While we evaluated template-based detection methods, the high variability in the owls' call notes made it difficult to establish a single matching template. Consequently, we opted for an energy-based detection approach, which is much better suited for capturing these dynamic signal variations.
+
+```{r}
+audio_data <- read_csv(here("data", "taiga_audio_metadata_5_owls.csv")) 
+```
+
+Set some detection parameters. Tested with various thresholds. Seems like 20 provided the best results. Take one audio to check.
+
+```{r}
+audio_file <- audio_data$filepath_audio[48]
+threshold_detection <- 20
+```
+
+Use energy detection to get the detection range.
+
+```{r}
+file_name <- basename(audio_file)
+folder_path <- dirname(audio_file)
+
+detection <- energy_detector(files = file_name,
+                             path = folder_path,
+                             bp = c(1, 5),
+                             threshold = threshold_detection,
+                             smooth = 500, # bridges tiny internal gaps
+                             hold.time = 1500) # merge selection if less than 1 sec in gap
+```
+
+Visualize the detection.
+
+```{r}
+sound <- readWave(audio_file)
+
+label_spectro(wave = sound,
+              detection = detection,
+              envelope = TRUE,
+              threshold = threshold_detection,
+              flim = c(0.5, 5.5))
+```
+
+Here we padded the detection to ensure the duration of the signal is a multiply of 3 seconds (3, 6, 9, 12, or 15 seconds), as the 3 seconds segments are the standard BirdNET segment duration.
+
+```{r}
+detection_padded <- extract_audio_events(audio_file,
+                                         threshold_detection = 20,
+                                         visualize = FALSE)
+```
+
+Plot the original detection and the padded detection to see the difference.
+
+```{r}
+label_spectro(wave = sound,
+              detection = detection,
+              reference = detection_padded,
+              envelope = TRUE,
+              threshold = threshold_detection,
+              flim = c(0.5, 5.5))
+```
 
 ### Analytical Workflow
 
 The automated pipeline processes the data through four major sequential stages:
 
 1.  **Audio Extraction** Demuxing raw `.mp4` camera trap footage into high-fidelity, uncompressed `.wav` audio tracks to preserve structural call characteristics.
-
-<!-- -->
-
-1.  **Vocalization Segmentation (`ohun`)** Isolating target vocalizations using amplitude envelope smoothing. Detections are dynamically padded into symmetric, centered intervals matching perfect multi-multiples of BirdNET processing constraints (3s, 6s, 9s).
-
-2.  **Deep Feature Extraction (BirdNET)** Passing the isolated clips through the BirdNET architecture to capture a **1024-dimensional acoustic fingerprint** (feature embeddings) for every vocal event.
-
-3.  **Multivariate Space Mapping** Applying unsupervised dimensionality reduction (UMAP) and distance-metric clustering to determine if the acoustic structures group cleanly by their visually verified band numbers.
+2.  **Vocalization Segmentation (`ohun`)** Isolating target vocalizations using amplitude envelope smoothing. Detections are dynamically padded into symmetric, centered intervals matching perfect multi-multiples of BirdNET processing constraints (3s, 6s, 9s).
+3.  **Deep Feature Extraction (BirdNET)** Passing the isolated clips through the BirdNET architecture to capture a **1024-dimensional acoustic fingerprint** (feature embeddings) for every vocal event.
+4.  **Multivariate Space Mapping** Applying unsupervised dimensionality reduction (UMAP) and distance-metric clustering to determine if the acoustic structures group cleanly by their visually verified band numbers.
 
 ## Running Code
 

@@ -144,22 +144,22 @@ extract_audio_events <- function(audio_file,
 
   # 5. Handle BACK clipping: If end > 15, shift window left to end at 15
   #    (Replace 15 with a dynamic max duration if your files vary in length)
-  past_end <- detection$end > 15
+  past_end <- detection$end > 15.3
   if (any(past_end)) {
     current_durations <- detection$end - detection$start
 
-    detection$end[past_end]   <- 15
-    detection$start[past_end] <- 15 - current_durations[past_end]
+    detection$end[past_end]   <- 15.3
+    detection$start[past_end] <- 15.3 - current_durations[past_end]
   }
 
   # 6. Recalculate final duration column for warbleR/ohun consistency
   detection$duration <- detection$end - detection$start
 
   # 7. Convert to tibble and append the full file path column
-  output_tibble <- as_tibble(detection) %>%
-    mutate(audio_file = audio_file)
+  # output_tibble <- detection %>%
+  #   mutate(audio_file = audio_file)
 
-  return(output_tibble)
+  return(detection)
 }
 
 
