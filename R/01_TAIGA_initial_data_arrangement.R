@@ -167,13 +167,110 @@ extract_audio_events <- function(audio_file,
 
 
 
+extract_audio_files <- function(video_folder,
+                                audio_folder = sub("video", "audio", video_folder)) {
 
+  # Mirror target structure in the audio repository
+  if (!dir.exists(audio_folder)) {
+    dir.create(audio_folder, recursive = TRUE)
+  }
+
+  # List all the video files
+  video_files <- list.files(path = video_folder,
+                            pattern = "\\.mp4$",
+                            full.names = TRUE,
+                            ignore.case = TRUE,
+                            recursive = TRUE)
+
+  for (video_file in video_files) {
+
+    # Map video path to target audio path
+    audio_file <- video_file %>%
+      str_replace("TAIGA_video", "TAIGA_audio") %>%
+      str_replace("\\.[^.]+$", ".wav")
+
+    target_dir <- dirname(audio_file)
+    if (!dir.exists(target_dir)) {
+      dir.create(target_dir, recursive = TRUE)
+    }
+
+    # Core Safety Check: Extract ONLY if the file does not exist yet
+    if (!file.exists(audio_file)) {
+      av_audio_convert(video_file, audio_file)
+    }
+  }
+}
+
+
+build_audio_metadata <- function(video_folder,
+                                 audio_folder) {
+
+  video_files <- list.files(path = video_folder,
+                            pattern = "\\.mp4$",
+                            full.names = TRUE,
+                            ignore.case = TRUE,
+                            recursive = TRUE)
+
+  audio_files <- list.files(path = audio_folder,
+                            pattern = "\\.wav$",
+                            full.names = TRUE,
+                            ignore.case = TRUE,
+                            recursive = TRUE)
+
+
+  output_file <- tibble()
+
+  for (i in 1:length(video_files)) {
+
+    # 1. Query raw video parameters
+    video_info <- mediainfo_query(file = video_files[i],
+                                  section = "General",
+                                  parameters = c("Encoded_Date", "Duration", "FileSize"))
+
+    # 2. Query audio parameters safely
+    if (file.exists(audio_files[i])) {
+      audio_info <- mediainfo_query(file = audio_files[i],
+                                    section = "Audio",
+                                    parameters = c("SamplingRate", "Channels", "BitDepth", "Format"))
+    } else {
+      # Fallback to prevent breaking bind_rows if audio doesn't exist yet
+      audio_info <- list(SamplingRate = NA, Channels = NA, BitDepth = NA, Format = NA)
+    }
+
+    file_info <- c(video_info, audio_info)
+    output_file <- bind_rows(output_file, file_info)
+  }
+
+  # 3. Clean names, extract site details/IDs, and select final outputs
+  av_file_metadata <- output_file %>%
+    clean_names() %>%
+    rename(datetime = encoded_date,
+           filepath_video = file_1,
+           filepath_audio = file_5) %>%
+    mutate(site = str_split_i(filepath_video, "/", -2) %>% str_extract("\\p{Han}+"),
+           owl_id = str_split_i(filepath_video, "/", 4) %>% str_extract("[A-Za-z0-9]+")) %>%
+    select(owl_id, site, datetime, duration, sampling_rate, channels, bit_depth, format,
+           filepath_video, filepath_audio)
+
+  return(av_file_metadata)
+}
 
 # extract audio, datetime from video ------------------------------------------------
+
+
+extract_audio_files(video_folder = "E:/2026_eastern_grassowl_Taiwan/TAIGA_video")
+
+build_audio_metadata(video_folder = "E:/2026_eastern_grassowl_Taiwan/TAIGA_video",
+                     audio_folder = "E:/2026_eastern_grassowl_Taiwan/TAIGA_audio")
+
+
+
+
 
 folder_list <- list.dirs(path = "E:/2026_eastern_grassowl_Taiwan/TAIGA_video",
                          full.names = TRUE,
                          recursive = FALSE)
+
 
 metadata_all <- folder_list %>%
   map_df(~ extract_audio_metadata(.x, extraction = FALSE))
