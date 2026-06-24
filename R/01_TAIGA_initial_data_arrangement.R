@@ -26,7 +26,8 @@ library(birdnetTools)
 
 # functions ---------------------------------------------------------------
 
-extract_audio_metadata <- function(video_folder, extraction = TRUE) {
+extract_audio_metadata <- function(video_folder,
+                                   extraction = TRUE) {
 
   # create empty folder for extracted audio
   audio_folder <- sub("video", "audio", video_folder)
@@ -96,6 +97,78 @@ extract_audio_metadata <- function(video_folder, extraction = TRUE) {
   return(av_file_metadata)
 }
 
+
+
+
+
+extract_audio_events <- function(audio_file,
+                                 threshold_detection,
+                                 visualize = FALSE) {
+
+  file_name <- basename(audio_file)
+  folder_path <- dirname(audio_file)
+
+  detection <- energy_detector(files = file_name,
+                               path = folder_path,
+                               bp = c(1, 5),
+                               threshold = threshold_detection,
+                               smooth = 500, # bridges tiny internal gaps
+                               hold.time = 1500) # merge selection if less than 1 sec in gap
+
+  if (visualize) {
+    sound <- readWave(audio_file)
+
+    label_spectro(wave = sound,
+                  detection = detection,
+                  envelope = TRUE,
+                  threshold = threshold_detection,
+                  flim = c(0.5, 5.5))
+  }
+
+
+
+  # 1. Calculate original durations and midpoints
+  orig_duration <- detection$end - detection$start
+  midpoints <- (detection$start + detection$end) / 2
+
+  # 2. Determine target duration: round UP to next multiple of 3 (unlimited)
+  target_duration <- ceiling(orig_duration / 3) * 3
+
+  # 3. Expand the start and end windows symmetrically around the midpoints
+  detection$start <- midpoints - (target_duration / 2)
+  detection$end   <- midpoints + (target_duration / 2)
+
+  # 4. Handle FRONT clipping: If start < 0, shift window right to start at 0
+  below_zero <- detection$start < 0
+  if (any(below_zero)) {
+    current_durations <- detection$end - detection$start
+
+    detection$start[below_zero] <- 0
+    detection$end[below_zero]   <- current_durations[below_zero]
+  }
+
+  # 5. Handle BACK clipping: If end > 15, shift window left to end at 15
+  #    (Replace 15 with a dynamic max duration if your files vary in length)
+  past_end <- detection$end > 15
+  if (any(past_end)) {
+    current_durations <- detection$end - detection$start
+
+    detection$end[past_end]   <- 15
+    detection$start[past_end] <- 15 - current_durations[past_end]
+  }
+
+  # 6. Recalculate final duration column for warbleR/ohun consistency
+  detection$duration <- detection$end - detection$start
+
+  # 7. Convert to tibble and append the full file path column
+  output_tibble <- as_tibble(detection) %>%
+    mutate(audio_file = audio_file)
+
+  return(output_tibble)
+}
+
+
+
 # extract audio, datetime from video ------------------------------------------------
 
 folder_list <- list.dirs(path = "E:/2026_eastern_grassowl_Taiwan/TAIGA_video",
@@ -127,65 +200,19 @@ write_csv(metadata_all, here("data", "taiga_audio_metadata_5_owls.csv"))
 audio_data <- read_csv(here("data", "taiga_audio_metadata_5_owls.csv")) %>%
   mutate(filepath_audio = str_replace(filepath_audio, "^D", "E"))
 
-threshold_detection <- 20
-i <- 50
 
-file_name <- basename(audio_data$filepath_audio[i])
-folder_path <- dirname(audio_data$filepath_audio[i])
+for (audio_file in audio_data$filepath_audio) {
+  detection <- extract_audio_events(audio_file,
+                                    threshold_detection = 20,
+                                    visualize = FALSE)
 
-detection <- energy_detector(files = file_name,
-                             path = folder_path,
-                             bp = c(1, 5),
-                             threshold = threshold_detection,
-                             smooth = 500, # bridges tiny internal gaps
-                             hold.time = 1500) # merge selection if less than 1 sec in gap
-
-sound <- readWave(audio_data$filepath_audio[6])
-
-label_spectro(wave = sound,
-              detection = detection,
-              envelope = TRUE,
-              threshold = threshold_detection,
-              flim = c(0.5, 5.5))
-
-
-
-
-
-# 1. Calculate original durations and midpoints
-orig_duration <- detection$end - detection$start
-midpoints <- (detection$start + detection$end) / 2
-
-# 2. Determine target duration: round UP to next multiple of 3 (unlimited)
-target_duration <- ceiling(orig_duration / 3) * 3
-
-# 3. Expand the start and end windows symmetrically around the midpoints
-detection$start <- midpoints - (target_duration / 2)
-detection$end   <- midpoints + (target_duration / 2)
-
-# 4. Handle FRONT clipping: If start < 0, shift window right to start at 0
-below_zero <- detection$start < 0
-if (any(below_zero)) {
-  current_durations <- detection$end - detection$start
-
-  detection$start[below_zero] <- 0
-  detection$end[below_zero]   <- current_durations[below_zero]
+  if (!exists("all_detections")) {
+    all_detections <- detection
+  } else {
+    all_detections <- bind_rows(all_detections, detection)
+  }
 }
 
-# 5. Handle BACK clipping: If end > 15, shift window left to end at 15
-#    (Replace 15 with a dynamic max duration if your files vary in length)
-past_end <- detection$end > 15
-if (any(past_end)) {
-  current_durations <- detection$end - detection$start
-
-  detection$end[past_end]   <- 15
-  detection$start[past_end] <- 15 - current_durations[past_end]
-}
-
-# 6. Recalculate final duration column for warbleR/ohun consistency
-detection$duration <- detection$end - detection$start
-
-print(detection)
 
 
 
@@ -199,32 +226,8 @@ print(detection)
 
 
 
-# 1. Calculate the midpoint of each detection
-midpoints <- (detection$start + detection$end) / 2
 
-# 2. Force a 3-second window centered on that midpoint
-detection$start <- midpoints - 1.5
-detection$end   <- midpoints + 1.5
 
-# 3. Handle FRONT clipping: If start < 0, shift window to [0, 3]
-below_zero <- detection$start < 0
-if (any(below_zero)) {
-  detection$start[below_zero] <- 0
-  detection$end[below_zero]   <- 3
-}
-
-# 4. Handle BACK clipping: If end > 15, shift window to [12, 15]
-# (Change 15 to a variable if your file lengths vary)
-past_end <- detection$end > 15
-if (any(past_end)) {
-  detection$end[past_end]   <- 15
-  detection$start[past_end] <- 15 - 3
-}
-
-# 5. Recalculate the duration column so warbleR/ohun stays happy
-detection$duration <- detection$end - detection$start
-
-print(detection)
 
 
 
