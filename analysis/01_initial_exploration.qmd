@@ -207,7 +207,7 @@ audio_data <- read_csv(here("data", "taiga_audio_metadata_5_owls.csv"))
 Loop the extraction function through all the audios and combine the detected results
 
 ```{r}
-#| cache: TRUE
+#| eval: FALSE
 #| message: FALSE
 
 # this chunk takes few minutes (about 10 mins) to run
@@ -224,6 +224,13 @@ metadata_event_detections <- event_detections %>%
   rename(clip_length = duration.x) %>%
   mutate(clip_id = paste0(audio_id, "-", selec)) %>%
   select(owl_id, site, datetime, selec, start, end, clip_length, filepath_audio, audio_id, clip_id)
+```
+
+```{r}
+#| echo: FALSE
+#| message: FALSE
+
+metadata_event_detections <- read_csv(here("data", "taiga_audio_events_metadata_5_owls.csv"))
 ```
 
 Take a peak at the results
@@ -246,14 +253,14 @@ Summarize how many clips are extracted for each of the owl
 
 ```{r}
 metadata_event_detections %>%
-  mutate(segment_length = fct_rev(factor(segment_length)))%>%
+  mutate(clip_length = fct_rev(factor(clip_length))) %>%
   ggplot() +
   geom_bar(aes(fill = clip_length,
                x = owl_id),
            position = "stack",
            stat = "count") +
   scale_fill_viridis(discrete = T) +
-  labs(y = "No. of segments",
+  labs(y = "No. of Clips",
        x = "Owl ID",
        fill = "Length (s)")
 
@@ -268,28 +275,14 @@ Save this cleaned metadata for later use
 write_csv(metadata_event_detections, here("data", "taiga_audio_events_metadata_5_owls.csv"))
 ```
 
-### Analytical Workflow
+## Note: analytical workflow
 
 The automated pipeline processes the data through four major sequential stages:
 
 1.  **Audio Extraction** Demuxing raw `.mp4` camera trap footage into high-fidelity, uncompressed `.wav` audio tracks to preserve structural call characteristics.
+
 2.  **Vocalization Segmentation (`ohun`)** Isolating target vocalizations using amplitude envelope smoothing. Detections are dynamically padded into symmetric, centered intervals matching perfect multi-multiples of BirdNET processing constraints (3s, 6s, 9s).
+
 3.  **Deep Feature Extraction (BirdNET)** Passing the isolated clips through the BirdNET architecture to capture a **1024-dimensional acoustic fingerprint** (feature embeddings) for every vocal event.
+
 4.  **Multivariate Space Mapping** Applying unsupervised dimensionality reduction (UMAP) and distance-metric clustering to determine if the acoustic structures group cleanly by their visually verified band numbers.
-
-## Running Code
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
-
-```{r}
-1 + 1
-```
-
-You can add options to executable code like this
-
-```{r}
-#| echo: false
-2 * 2
-```
-
-The `echo: false` option disables the printing of code (only output is displayed).

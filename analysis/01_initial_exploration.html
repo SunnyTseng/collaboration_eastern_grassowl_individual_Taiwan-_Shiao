@@ -369,37 +369,100 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell">
 <div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>audio_data <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="fu">here</span>(<span class="st">"data"</span>, <span class="st">"taiga_audio_metadata_5_owls.csv"</span>)) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Loop the extraction function through all the audios and combine the detected restuls</p>
+<p>Loop the extraction function through all the audios and combine the detected results</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># this chunk takes few minutes (about 10 mins) to run</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># this chunk takes few minutes (about 10 mins) to run</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>event_detections <span class="ot">&lt;-</span> <span class="fu">map2_df</span>(audio_data<span class="sc">$</span>filepath_audio,</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>                            audio_data<span class="sc">$</span>audio_id,</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>                            <span class="cf">function</span>(path, id) {</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>                              <span class="fu">extract_audio_events</span>(path, <span class="at">threshold_detection =</span> <span class="dv">20</span>, <span class="at">visualize =</span> <span class="cn">FALSE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>                                <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>                                <span class="fu">mutate</span>(<span class="at">audio_id =</span> id)})</span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>metadata_event_detections <span class="ot">&lt;-</span> event_detections <span class="sc">%&gt;%</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(audio_data, <span class="at">by =</span> <span class="st">"audio_id"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">clip_length =</span> duration.x) <span class="sc">%&gt;%</span></span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">clip_id =</span> <span class="fu">paste0</span>(audio_id, <span class="st">"-"</span>, selec)) <span class="sc">%&gt;%</span></span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(owl_id, site, datetime, selec, start, end, clip_length, filepath_audio, audio_id, clip_id)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<section id="analytical-workflow" class="level3">
-<h3 class="anchored" data-anchor-id="analytical-workflow">Analytical Workflow</h3>
+<p>Take a peak at the results</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-5-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-1" role="tab" aria-controls="tabset-5-1" aria-selected="true" href="">Check head</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-2" role="tab" aria-controls="tabset-5-2" aria-selected="false" href="">Check columns</a></li></ul>
+<div class="tab-content">
+<div id="tabset-5-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-5-1-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(metadata_event_detections)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 10
+  owl_id site   datetime   selec start   end clip_length filepath_audio audio_id
+  &lt;chr&gt;  &lt;chr&gt;  &lt;chr&gt;      &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;       &lt;dbl&gt; &lt;chr&gt;          &lt;chr&gt;   
+1 A89    土庫北 2025-07-2…     1  2.98  6.98           4 E:/2026_easte… A89 - 土…
+2 A89    土庫北 2025-07-2…     1  4.62  7.62           3 E:/2026_easte… A89 - 土…
+3 A89    土庫北 2025-07-2…     2 11.3  15.3            4 E:/2026_easte… A89 - 土…
+4 A89    土庫北 2025-08-0…     1 12.3  15.3            3 E:/2026_easte… A89 - 土…
+5 A89    土庫北 2025-08-0…     1  0     3              3 E:/2026_easte… A89 - 土…
+6 A89    土庫北 2025-08-0…     2  3.33  6.33           3 E:/2026_easte… A89 - 土…
+# ℹ 1 more variable: clip_id &lt;chr&gt;</code></pre>
+</div>
+</div>
+</div>
+<div id="tabset-5-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>metadata_event_detections <span class="sc">%&gt;%</span> <span class="fu">head</span> (<span class="dv">2</span>) <span class="sc">%&gt;%</span> <span class="fu">glimpse</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 2
+Columns: 10
+$ owl_id         &lt;chr&gt; "A89", "A89"
+$ site           &lt;chr&gt; "土庫北", "土庫北"
+$ datetime       &lt;chr&gt; "2025-07-23 19:34:56 UTC", "2025-07-23 21:20:20 UTC"
+$ selec          &lt;dbl&gt; 1, 1
+$ start          &lt;dbl&gt; 2.980518, 4.620247
+$ end            &lt;dbl&gt; 6.980518, 7.620247
+$ clip_length    &lt;dbl&gt; 4, 3
+$ filepath_audio &lt;chr&gt; "E:/2026_eastern_grassowl_Taiwan/TAIGA_audio/土庫北A89/072…
+$ audio_id       &lt;chr&gt; "A89 - 土庫北 - 2025-07-23 19:34:56 UTC", "A89 - 土庫北 - 202…
+$ clip_id        &lt;chr&gt; "A89 - 土庫北 - 2025-07-23 19:34:56 UTC-1", "A89 - 土庫北 - 2…</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<p>Summarize how many clips are extracted for each of the owl</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>metadata_event_detections <span class="sc">%&gt;%</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">clip_length =</span> <span class="fu">fct_rev</span>(<span class="fu">factor</span>(clip_length))) <span class="sc">%&gt;%</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="fu">aes</span>(<span class="at">fill =</span> clip_length,</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>               <span class="at">x =</span> owl_id),</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>           <span class="at">position =</span> <span class="st">"stack"</span>,</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>           <span class="at">stat =</span> <span class="st">"count"</span>) <span class="sc">+</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis</span>(<span class="at">discrete =</span> T) <span class="sc">+</span></span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">y =</span> <span class="st">"No. of Clips"</span>,</span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Owl ID"</span>,</span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">fill =</span> <span class="st">"Length (s)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="01_initial_exploration_files/figure-html/unnamed-chunk-21-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Save this cleaned metadata for later use</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(metadata_event_detections, <span class="fu">here</span>(<span class="st">"data"</span>, <span class="st">"taiga_audio_events_metadata_5_owls.csv"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="note-analytical-workflow" class="level2">
+<h2 class="anchored" data-anchor-id="note-analytical-workflow">Note: analytical workflow</h2>
 <p>The automated pipeline processes the data through four major sequential stages:</p>
 <ol type="1">
-<li><strong>Audio Extraction</strong> Demuxing raw <code>.mp4</code> camera trap footage into high-fidelity, uncompressed <code>.wav</code> audio tracks to preserve structural call characteristics.</li>
-<li><strong>Vocalization Segmentation (<code>ohun</code>)</strong> Isolating target vocalizations using amplitude envelope smoothing. Detections are dynamically padded into symmetric, centered intervals matching perfect multi-multiples of BirdNET processing constraints (3s, 6s, 9s).</li>
-<li><strong>Deep Feature Extraction (BirdNET)</strong> Passing the isolated clips through the BirdNET architecture to capture a <strong>1024-dimensional acoustic fingerprint</strong> (feature embeddings) for every vocal event.</li>
-<li><strong>Multivariate Space Mapping</strong> Applying unsupervised dimensionality reduction (UMAP) and distance-metric clustering to determine if the acoustic structures group cleanly by their visually verified band numbers.</li>
+<li><p><strong>Audio Extraction</strong> Demuxing raw <code>.mp4</code> camera trap footage into high-fidelity, uncompressed <code>.wav</code> audio tracks to preserve structural call characteristics.</p></li>
+<li><p><strong>Vocalization Segmentation (<code>ohun</code>)</strong> Isolating target vocalizations using amplitude envelope smoothing. Detections are dynamically padded into symmetric, centered intervals matching perfect multi-multiples of BirdNET processing constraints (3s, 6s, 9s).</p></li>
+<li><p><strong>Deep Feature Extraction (BirdNET)</strong> Passing the isolated clips through the BirdNET architecture to capture a <strong>1024-dimensional acoustic fingerprint</strong> (feature embeddings) for every vocal event.</p></li>
+<li><p><strong>Multivariate Space Mapping</strong> Applying unsupervised dimensionality reduction (UMAP) and distance-metric clustering to determine if the acoustic structures group cleanly by their visually verified band numbers.</p></li>
 </ol>
-</section>
-</section>
-<section id="running-code" class="level2">
-<h2 class="anchored" data-anchor-id="running-code">Running Code</h2>
-<p>When you click the <strong>Render</strong> button a document will be generated that includes both content and the output of embedded code. You can embed code like this:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span> <span class="sc">+</span> <span class="dv">1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 2</code></pre>
-</div>
-</div>
-<p>You can add options to executable code like this</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 4</code></pre>
-</div>
-</div>
-<p>The <code>echo: false</code> option disables the printing of code (only output is displayed).</p>
 </section>
 
 </main>
