@@ -26,7 +26,7 @@ source(here::here("R", "00_functions_packages.R"))
 ## Extract audios from video
 
 ```{r}
-#| cache: true
+#| cache: TRUE
 
 video_root <- "E:/2026_eastern_grassowl_Taiwan/TAIGA_video"
 
@@ -47,7 +47,7 @@ dir_tree(video_root, recurse = FALSE)
 ## How many videos
 
 ```{r}
-#| cache: true
+#| cache: TRUE
 
 video_summary <- tibble(folder_path = folder_list) %>% 
   mutate(folder_name = basename(folder_path),
@@ -75,7 +75,7 @@ The `build_audio_metadata()` function gathers and organizes all the technical de
 
 ```{r}
 #| warning: FALSE
-#| cache: true
+#| cache: TRUE
 
 metadata_all <- build_audio_metadata(video_folder = "E:/2026_eastern_grassowl_Taiwan/TAIGA_video",
                                      audio_folder = "E:/2026_eastern_grassowl_Taiwan/TAIGA_audio")
@@ -133,6 +133,8 @@ write_csv(metadata_all, here("data", "taiga_audio_metadata_5_owls.csv"))
 While we evaluated template-based detection methods, the high variability in the owls' call notes made it difficult to establish a single matching template. Consequently, we opted for an energy-based detection approach, which is much better suited for capturing these dynamic signal variations.
 
 ```{r}
+#| message: FALSE
+
 audio_data <- read_csv(here("data", "taiga_audio_metadata_5_owls.csv")) 
 ```
 
@@ -143,25 +145,23 @@ audio_file <- audio_data$filepath_audio[48]
 threshold_detection <- 20
 ```
 
-Use energy detection to get the detection range.
+::: panel-tabset
+## Original detection
+
+The energy detector isolates signals above our threshold within a 1–5 kHz frequency band, targeting the specific vocal range of the Eastern Grass Owl. We applied a 500 ms smoothing window to bridge brief drops in signal intensity, and used a hold-time parameter to merge short, closely spaced detections into a single call sequence.
 
 ```{r}
-file_name <- basename(audio_file)
-folder_path <- dirname(audio_file)
+#| cache: TRUE
+#| message: FALSE
 
-detection <- energy_detector(files = file_name,
-                             path = folder_path,
+detection <- energy_detector(files = basename(audio_file),
+                             path = dirname(audio_file),
                              bp = c(1, 5),
                              threshold = threshold_detection,
-                             smooth = 500, # bridges tiny internal gaps
-                             hold.time = 1500) # merge selection if less than 1 sec in gap
-```
-
-Visualize the detection.
-
-```{r}
+                             smooth = 500, 
+                             hold.time = 1500) 
+  
 sound <- readWave(audio_file)
-
 label_spectro(wave = sound,
               detection = detection,
               envelope = TRUE,
@@ -169,23 +169,33 @@ label_spectro(wave = sound,
               flim = c(0.5, 5.5))
 ```
 
-Here we padded the detection to ensure the duration of the signal is a multiply of 3 seconds (3, 6, 9, 12, or 15 seconds), as the 3 seconds segments are the standard BirdNET segment duration.
+## Padded detection
+
+Detections were padded to lengths of exact 3-second multiples (3, 6, 9, 12, or 15 seconds) to align with the fixed 3-second analysis window utilized by BirdNET. This step ensures that every target signal is perfectly contained within the model's expected input structure.
 
 ```{r}
+#| cache: TRUE
+
 detection_padded <- extract_audio_events(audio_file,
                                          threshold_detection = 20,
                                          visualize = FALSE)
-```
 
-Plot the original detection and the padded detection to see the difference.
-
-```{r}
+sound <- readWave(audio_file)
 label_spectro(wave = sound,
               detection = detection,
               reference = detection_padded,
               envelope = TRUE,
               threshold = threshold_detection,
               flim = c(0.5, 5.5))
+```
+:::
+
+## Extracting all
+
+```{r}
+#| cache: true
+
+
 ```
 
 ### Analytical Workflow

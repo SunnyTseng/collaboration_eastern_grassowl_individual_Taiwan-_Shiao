@@ -296,46 +296,54 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>While we evaluated template-based detection methods, the high variability in the owls’ call notes made it difficult to establish a single matching template. Consequently, we opted for an energy-based detection approach, which is much better suited for capturing these dynamic signal variations.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>audio_data <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="fu">here</span>(<span class="st">"data"</span>, <span class="st">"taiga_audio_metadata_5_owls.csv"</span>)) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Rows: 89 Columns: 10
-── Column specification ────────────────────────────────────────────────────────
-Delimiter: ","
-chr (6): owl_id, site, datetime, format, filepath_video, filepath_audio
-dbl (4): duration, sampling_rate, channels, bit_depth
-
-ℹ Use `spec()` to retrieve the full column specification for this data.
-ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
-</div>
 </div>
 <p>Set some detection parameters. Tested with various thresholds. Seems like 20 provided the best results. Take one audio to check.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>audio_file <span class="ot">&lt;-</span> audio_data<span class="sc">$</span>filepath_audio[<span class="dv">48</span>]</span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>threshold_detection <span class="ot">&lt;-</span> <span class="dv">20</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>audio_file <span class="ot">&lt;-</span> audio_data<span class="sc">$</span>filepath_audio[<span class="dv">48</span>]</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>threshold_detection <span class="ot">&lt;-</span> <span class="dv">20</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Use energy detection to get the detection range.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true" href="">Original detection</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false" href="">Padded detection</a></li></ul>
+<div class="tab-content">
+<div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
+<p>The energy detector isolates signals above our threshold within a 1–5 kHz frequency band, targeting the specific vocal range of the Eastern Grass Owl. We applied a 500 ms smoothing window to bridge brief drops in signal intensity, and used a hold-time parameter to merge short, closely spaced detections into a single call sequence.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>file_name <span class="ot">&lt;-</span> <span class="fu">basename</span>(audio_file)</span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>folder_path <span class="ot">&lt;-</span> <span class="fu">dirname</span>(audio_file)</span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>detection <span class="ot">&lt;-</span> <span class="fu">energy_detector</span>(<span class="at">files =</span> file_name,</span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>                             <span class="at">path =</span> folder_path,</span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>                             <span class="at">bp =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">5</span>),</span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>                             <span class="at">threshold =</span> threshold_detection,</span>
-<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>                             <span class="at">smooth =</span> <span class="dv">500</span>, <span class="co"># bridges tiny internal gaps</span></span>
-<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>                             <span class="at">hold.time =</span> <span class="dv">1500</span>) <span class="co"># merge selection if less than 1 sec in gap</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>detecting sound events (step 0 of 0):</code></pre>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>detection <span class="ot">&lt;-</span> <span class="fu">energy_detector</span>(<span class="at">files =</span> <span class="fu">basename</span>(audio_file),</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>                             <span class="at">path =</span> <span class="fu">dirname</span>(audio_file),</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>                             <span class="at">bp =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">5</span>),</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>                             <span class="at">threshold =</span> threshold_detection,</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>                             <span class="at">smooth =</span> <span class="dv">500</span>, </span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>                             <span class="at">hold.time =</span> <span class="dv">1500</span>) </span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>sound <span class="ot">&lt;-</span> <span class="fu">readWave</span>(audio_file)</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="fu">label_spectro</span>(<span class="at">wave =</span> sound,</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>              <span class="at">detection =</span> detection,</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>              <span class="at">envelope =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>              <span class="at">threshold =</span> threshold_detection,</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>              <span class="at">flim =</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">5.5</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="01_initial_exploration_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
 </div>
 </div>
-<p>Visualize the detection.</p>
+</div>
+</div>
+<div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
+<p>Detections were padded to lengths of exact 3-second multiples (3, 6, 9, 12, or 15 seconds) to align with the fixed 3-second analysis window utilized by BirdNET. This step ensures that every target signal is perfectly contained within the model’s expected input structure.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>sound <span class="ot">&lt;-</span> <span class="fu">readWave</span>(audio_file)</span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="fu">label_spectro</span>(<span class="at">wave =</span> sound,</span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>              <span class="at">detection =</span> detection,</span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>              <span class="at">envelope =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>              <span class="at">threshold =</span> threshold_detection,</span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>              <span class="at">flim =</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">5.5</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>detection_padded <span class="ot">&lt;-</span> <span class="fu">extract_audio_events</span>(audio_file,</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>                                         <span class="at">threshold_detection =</span> <span class="dv">20</span>,</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>                                         <span class="at">visualize =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>sound <span class="ot">&lt;-</span> <span class="fu">readWave</span>(audio_file)</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="fu">label_spectro</span>(<span class="at">wave =</span> sound,</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>              <span class="at">detection =</span> detection,</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>              <span class="at">reference =</span> detection_padded,</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>              <span class="at">envelope =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>              <span class="at">threshold =</span> threshold_detection,</span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>              <span class="at">flim =</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">5.5</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -344,28 +352,12 @@ dbl (4): duration, sampling_rate, channels, bit_depth
 </div>
 </div>
 </div>
-<p>Here we padded the detection to ensure the duration of the signal is a multiply of 3 seconds (3, 6, 9, 12, or 15 seconds), as the 3 seconds segments are the standard BirdNET segment duration.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>detection_padded <span class="ot">&lt;-</span> <span class="fu">extract_audio_events</span>(audio_file,</span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>                                         <span class="at">threshold_detection =</span> <span class="dv">20</span>,</span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>                                         <span class="at">visualize =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Plot the original detection and the padded detection to see the difference.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">label_spectro</span>(<span class="at">wave =</span> sound,</span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>              <span class="at">detection =</span> detection,</span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>              <span class="at">reference =</span> detection_padded,</span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>              <span class="at">envelope =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>              <span class="at">threshold =</span> threshold_detection,</span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>              <span class="at">flim =</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">5.5</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="01_initial_exploration_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
 </div>
 </div>
 </div>
+</section>
+<section id="extracting-all" class="level2">
+<h2 class="anchored" data-anchor-id="extracting-all">Extracting all</h2>
 <section id="analytical-workflow" class="level3">
 <h3 class="anchored" data-anchor-id="analytical-workflow">Analytical Workflow</h3>
 <p>The automated pipeline processes the data through four major sequential stages:</p>
@@ -381,7 +373,7 @@ dbl (4): duration, sampling_rate, channels, bit_depth
 <h2 class="anchored" data-anchor-id="running-code">Running Code</h2>
 <p>When you click the <strong>Render</strong> button a document will be generated that includes both content and the output of embedded code. You can embed code like this:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span> <span class="sc">+</span> <span class="dv">1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span> <span class="sc">+</span> <span class="dv">1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 2</code></pre>
 </div>
