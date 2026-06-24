@@ -92,11 +92,25 @@ tail(metadata_all)
 ::: panel-tabset
 ## Check owls
 
-```{r}
+Check the recordings from each owl / site combination
 
+```{r}
+#| message: FALSE
+metadata_all %>%
+  group_by(owl_id, site) %>%
+  summarize(audios = n())
 ```
 
 ## Check time
+
+Check the hours that owl got recorded. Only after 6pm, and before 5am.
+
+```{r}
+metadata_all$datetime %>%
+  hour() %>%
+  unique() %>%
+  sort()
+```
 :::
 
 Save this cleaned metadata for later use
@@ -106,6 +120,8 @@ Save this cleaned metadata for later use
 
 write_csv(metadata_all, here("data", "taiga_audio_metadata_5_owls.csv"))
 ```
+
+## Extract events within audio
 
 ### Analytical Workflow
 
