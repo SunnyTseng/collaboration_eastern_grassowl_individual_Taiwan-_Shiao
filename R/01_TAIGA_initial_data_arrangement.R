@@ -90,7 +90,7 @@ extract_audio_metadata <- function(video_folder, extraction = TRUE) {
            filepath_audio = file_5) %>%
     mutate(site = str_split_i(filepath_video, "/", -2) %>% str_extract("\\p{Han}+"),
            owl_id = str_split_i(filepath_video, "/", 4) %>% str_extract("[A-Za-z0-9]+")) %>%
-    select(owl_id, site, datetime, sampling_rate, channels, bit_depth, format,
+    select(owl_id, site, datetime, duration, sampling_rate, channels, bit_depth, format,
            filepath_video, filepath_audio)
 
   return(av_file_metadata)
@@ -98,13 +98,13 @@ extract_audio_metadata <- function(video_folder, extraction = TRUE) {
 
 # extract audio, datetime from video ------------------------------------------------
 
-folder_list <- list.dirs(path = "D:/2026_eastern_grassowl_Taiwan/TAIGA_video",
+folder_list <- list.dirs(path = "E:/2026_eastern_grassowl_Taiwan/TAIGA_video",
                          full.names = TRUE,
                          recursive = FALSE)
 
 metadata_all <- tibble()
 for (folder in folder_list) {
-  metadata <- extract_audio_metadata(folder, extraction = TRUE)
+  metadata <- extract_audio_metadata(folder, extraction = FALSE)
   metadata_all <- bind_rows(metadata_all, metadata)
 }
 
@@ -124,74 +124,114 @@ write_csv(metadata_all, here("data", "taiga_audio_metadata_5_owls.csv"))
 # Be aware for the duration of the final extraction. Try to make the extracted clip
 # covered by the sounds, but also be about 3, 6, or 9 seconds for birdnet analysis (?)
 
-# load example data
-data("lbh1", "lbh2", "lbh_reference")
+audio_data <- read_csv(here("data", "taiga_audio_metadata_5_owls.csv")) %>%
+  mutate(filepath_audio = str_replace(filepath_audio, "^D", "E"))
 
-# save sound files
-tuneR::writeWave(lbh1, file.path(tempdir(), "lbh1.wav"))
-tuneR::writeWave(lbh2, file.path(tempdir(), "lbh2.wav"))
+threshold_detection <- 20
+i <- 50
 
-# select a subset of the data
-lbh1_reference <-
-  lbh_reference[lbh_reference$sound.files == "lbh1.wav",]
+file_name <- basename(audio_data$filepath_audio[i])
+folder_path <- dirname(audio_data$filepath_audio[i])
 
-# print data
-lbh1_reference
+detection <- energy_detector(files = file_name,
+                             path = folder_path,
+                             bp = c(1, 5),
+                             threshold = threshold_detection,
+                             smooth = 500, # bridges tiny internal gaps
+                             hold.time = 1500) # merge selection if less than 1 sec in gap
 
-# install this package first if not installed
-# install.packages("Sim.DiffProc")
+sound <- readWave(audio_data$filepath_audio[6])
 
-#Creating vector for duration
-durs <- rep(c(0.3, 1), 5)
-
-set.seed(123)
-freqs <- sample(c(3, 6), 10, replace = TRUE)
-
-
-#Creating simulated song
-set.seed(12)
-simulated_1 <-
-  warbleR::simulate_songs(
-    n = 10,
-    durs = durs,
-    freqs = freqs,
-    sig2 = 0.1,
-    gaps = 0.5,
-    harms = 1,
-    bgn = 0.1,
-    freq.range = 2,
-    path = tempdir(),
-    file.name = "simulated_1",
-    selec.table = TRUE,
-    shape = "cos",
-    fin = 0.3,
-    fout = 0.35,
-    samp.rate = 18
-  )$wave
-
-
-# plot spectrogram and envelope
-label_spectro(wave = simulated_1,
-              env = TRUE,
-              fastdisp = TRUE)
-
-
-# run detection
-detection <-
-  energy_detector(
-    files = "simulated_1.wav",
-    bp = c(2, 8),
-    threshold = 50,
-    smooth = 150,
-    path = tempdir()
-  )
+label_spectro(wave = sound,
+              detection = detection,
+              envelope = TRUE,
+              threshold = threshold_detection,
+              flim = c(0.5, 5.5))
 
 
 
 
 
+# 1. Calculate original durations and midpoints
+orig_duration <- detection$end - detection$start
+midpoints <- (detection$start + detection$end) / 2
+
+# 2. Determine target duration: round UP to next multiple of 3 (unlimited)
+target_duration <- ceiling(orig_duration / 3) * 3
+
+# 3. Expand the start and end windows symmetrically around the midpoints
+detection$start <- midpoints - (target_duration / 2)
+detection$end   <- midpoints + (target_duration / 2)
+
+# 4. Handle FRONT clipping: If start < 0, shift window right to start at 0
+below_zero <- detection$start < 0
+if (any(below_zero)) {
+  current_durations <- detection$end - detection$start
+
+  detection$start[below_zero] <- 0
+  detection$end[below_zero]   <- current_durations[below_zero]
+}
+
+# 5. Handle BACK clipping: If end > 15, shift window left to end at 15
+#    (Replace 15 with a dynamic max duration if your files vary in length)
+past_end <- detection$end > 15
+if (any(past_end)) {
+  current_durations <- detection$end - detection$start
+
+  detection$end[past_end]   <- 15
+  detection$start[past_end] <- 15 - current_durations[past_end]
+}
+
+# 6. Recalculate final duration column for warbleR/ohun consistency
+detection$duration <- detection$end - detection$start
+
+print(detection)
 
 
+
+
+
+
+
+
+
+
+
+
+
+# 1. Calculate the midpoint of each detection
+midpoints <- (detection$start + detection$end) / 2
+
+# 2. Force a 3-second window centered on that midpoint
+detection$start <- midpoints - 1.5
+detection$end   <- midpoints + 1.5
+
+# 3. Handle FRONT clipping: If start < 0, shift window to [0, 3]
+below_zero <- detection$start < 0
+if (any(below_zero)) {
+  detection$start[below_zero] <- 0
+  detection$end[below_zero]   <- 3
+}
+
+# 4. Handle BACK clipping: If end > 15, shift window to [12, 15]
+# (Change 15 to a variable if your file lengths vary)
+past_end <- detection$end > 15
+if (any(past_end)) {
+  detection$end[past_end]   <- 15
+  detection$start[past_end] <- 15 - 3
+}
+
+# 5. Recalculate the duration column so warbleR/ohun stays happy
+detection$duration <- detection$end - detection$start
+
+print(detection)
+
+
+
+
+
+
+# others ------------------------------------------------------------------
 
 
 
