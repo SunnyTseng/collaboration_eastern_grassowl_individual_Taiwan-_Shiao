@@ -11,6 +11,7 @@
 library(tidyverse)
 library(here)
 library(janitor)
+library(fs)
 
 #audio processing
 library(av)
@@ -98,9 +99,6 @@ extract_audio_metadata <- function(video_folder,
 }
 
 
-
-
-
 extract_audio_events <- function(audio_file,
                                  threshold_detection,
                                  visualize = FALSE) {
@@ -169,17 +167,16 @@ extract_audio_events <- function(audio_file,
 
 
 
+
+
 # extract audio, datetime from video ------------------------------------------------
 
 folder_list <- list.dirs(path = "E:/2026_eastern_grassowl_Taiwan/TAIGA_video",
                          full.names = TRUE,
                          recursive = FALSE)
 
-metadata_all <- tibble()
-for (folder in folder_list) {
-  metadata <- extract_audio_metadata(folder, extraction = FALSE)
-  metadata_all <- bind_rows(metadata_all, metadata)
-}
+metadata_all <- folder_list %>%
+  map_df(~ extract_audio_metadata(.x, extraction = FALSE))
 
 # save the metadata table
 write_csv(metadata_all, here("data", "taiga_audio_metadata_5_owls.csv"))

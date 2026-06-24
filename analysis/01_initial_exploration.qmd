@@ -221,6 +221,8 @@ knitr::kable(video_summary, col.names = c("Site / Owl Folder", "Total Audio File
 The `extract_audio_metadata()` function automates the primary data ingestion by converting raw `.mp4` camera trap videos into `.wav` audio files. It accepts two arguments: `video_folder` (the path to the raw files) and `extraction` (a logical switch). By setting `extraction = FALSE`, users can suppress the conversion process and query the extracted audio metadata.
 
 ```{r}
+#| warning: FALSE
+#| cache: true
 metadata_all <- folder_list %>% 
   map_df(~ extract_audio_metadata(.x, extraction = FALSE))
 ```
@@ -244,6 +246,8 @@ summary(metadata_all)
 Save this cleaned metadata for later use
 
 ```{r}
+#| eval: FALSE
+
 write_csv(metadata_all, here("data", "taiga_audio_metadata_5_owls.csv"))
 ```
 
