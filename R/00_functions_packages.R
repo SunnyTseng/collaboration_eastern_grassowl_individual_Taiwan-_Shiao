@@ -132,13 +132,25 @@ build_audio_metadata <- function(video_folder,
 
 
 extract_audio_events <- function(audio_folder,
-                                 audio_event_folder = sub("audio", "audio_event", audio_folder)
-                                 threshold_detection,
-                                 visualize = FALSE) {
+                                 audio_event_folder = sub("audio", "audio_event", audio_folder),
+                                 threshold_detection) {
 
   # Mirror target structure in the audio repository
   if (!dir.exists(audio_event_folder)) {
     dir.create(audio_event_folder, recursive = TRUE)
+  }
+
+  # List audio files
+  audio_files <- list.files(path = audio_folder,
+                            pattern = "\\.wav$",
+                            full.names = TRUE,
+                            ignore.case = TRUE,
+                            recursive = TRUE)
+
+  # Get detection for each of the audio files
+
+  for(audio_file in audio_files){
+
   }
 
   file_name <- basename(audio_file)
@@ -151,61 +163,47 @@ extract_audio_events <- function(audio_folder,
                                smooth = 500, # bridges tiny internal gaps
                                hold.time = 1500) # merge selection if less than 1 sec in gap
 
-  if (visualize) {
-    sound <- readWave(audio_file)
-
-    label_spectro(wave = sound,
-                  detection = detection,
-                  envelope = TRUE,
-                  threshold = threshold_detection,
-                  flim = c(0.5, 5.5))
-  }
-
-
   detection_cleaned <- detection %>%
-    mutate(orig_duration = end - start) %>%
-    # Rule 1: Drop detections shorter than 3 seconds
-    filter(orig_duration >= 3) %>%
     rowwise() %>%
-    mutate(n_chunks = case_when(orig_duration < 6  ~ 1,
-                                orig_duration < 9  ~ 2,
-                                orig_duration < 12 ~ 3,
-                                orig_duration <= 15 ~ 4,
-                                TRUE ~ floor(orig_duration / 3)), # fallback for > 15s
+    mutate(orig_duration = end - start) %>%
+
+    # Drop detections shorter than 3 seconds
+    filter(orig_duration >= 3) %>%
+
+    # Calculate the number of 3-second chunks needed to cover the original duration
+    mutate(n_clips = floor(orig_duration / 3),
 
            # Midpoint of the overall detected call
            midpoint = (start + end) / 2,
 
            # Total span required to place n contiguous 3-second chunks (n * 3)
-           total_chunks_duration = n_chunks * 3,
+           total_clips_duration = n_clips * 3,
 
            # Start time for the block of chunks, centered on the call midpoint
-           block_start = midpoint - (total_chunks_duration / 2)) %>%
+           block_start = midpoint - (total_clips_duration / 2)) %>%
 
-    # Rule 2 & 3: Generate the individual 3-second start/end pairs
+    # Generate the individual 3-second start/end pairs
     reframe(sound.files = sound.files,
             call_id = row_number(),
-            chunk_index = 1:n_chunks,
-            start = block_start + (chunk_index - 1) * 3,
-            end = block_start + chunk_index * 3) %>%
+            clip_index = 1:n_clips,
+            start = block_start + (clip_index - 1) * 3,
+            end = block_start + clip_index * 3) %>%
 
     # Boundary Safeguards: Ensure windows stay within [0, 15.3] seconds
-    mutate(
-      # Shift right if starting before 0s
-      shift_right = if_else(start < 0, 0 - start, 0),
-      start = start + shift_right,
-      end = end + shift_right,
-      # Shift left if ending past file duration (15.3s)
-      shift_left = if_else(end > 15.3, end - 15.3, 0),
-      start = start - shift_left,
-      end = end - shift_left,
-      duration = end - start) %>%
+    # Shift right if starting before 0s
+    mutate(shift_right = if_else(start < 0, 0 - start, 0),
+           start = start + shift_right,
+           end = end + shift_right,
+           shift_left = if_else(end > 15.3, end - 15.3, 0),
+           start = start - shift_left,
+           end = end - shift_left,
+           duration = end - start) %>%
 
     # Mutate audio file info
     mutate(audio_file) %>%
 
     # Final clean up
-    select(audio_file, sound.files, call_id, chunk_index, start, end, duration)
+    select(call_id, clip_index, start, end, duration, audio_file)
 
 
 

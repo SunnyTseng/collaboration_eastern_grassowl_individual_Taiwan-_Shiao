@@ -5,28 +5,14 @@
 source(here::here("R", "00_functions_packages.R"))
 
 
-
-
 # data exploration --------------------------------------------------------
 
 video_root <- here::here("data", "TAIGA_video")
 
 ## check the number of folders - 5
-folder_list <- list.dirs(path = video_root,
-                         full.names = TRUE,
-                         recursive = FALSE)
-
-## check the number of videos in each folder
-tibble(folder_path = folder_list) %>%
-  mutate(folder_name = basename(folder_path),
-         total_videos = map_int(folder_path,
-                                ~{list.files(path = .x,
-                                             pattern = "\\.mp4$",
-                                             recursive = TRUE,
-                                             ignore.case = TRUE) %>% length()})) %>%
-  select(folder_name, total_videos)
-
-
+list.dirs(path = video_root,
+          full.names = TRUE,
+          recursive = FALSE)
 
 
 # extract audio, datetime from video ------------------------------------------------
