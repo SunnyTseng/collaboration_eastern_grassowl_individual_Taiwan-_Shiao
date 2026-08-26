@@ -12,6 +12,7 @@ library(fs)
 
 #visualization
 library(viridis)
+library(umap)
 
 #audio processing
 library(av)

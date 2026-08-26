@@ -33,7 +33,7 @@ extract_audio_files(video_folder = here("data", "TAIGA_video"))
 metadata_all <- build_audio_metadata(video_folder = here("data", "TAIGA_video"),
                                      audio_folder = here("data", "TAIGA_audio"))
 
-write_csv(metadata_all, here("data", "taiga_audio_metadata_test.csv"))
+# write_csv(metadata_all, here("data", "taiga_audio_metadata_test.csv"))
 
 
 
@@ -101,8 +101,8 @@ embeddings_df <- map_dfr(embedding_files, function(file_path) {
   select(file_name, owl_species, segment_id, everything(), -source_file_index)
 
 
-
-# paused here -------------------------------------------------------------
+#save(embeddings_df,
+#     file = here("data", "taiga_audio_event_embeddings_df.rds"))
 
 
 

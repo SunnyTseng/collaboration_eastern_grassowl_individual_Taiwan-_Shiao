@@ -32,6 +32,14 @@ editor: visual
 
 -   Finished the "function" extracting audios and metadata from video folders
 
+## 2026 Aug.26
+
+-   Created the embedding separation, using only 3 sec clips full with vocalization. Seems like there are some separation.
+
+-   Two clusters of orange - potentially from the "non insect" vocalization. Need to remove
+
+![](images/clipboard-1467168338.png)
+
 ## Big Picture
 
 1.  Extract audio from video, with metadata
