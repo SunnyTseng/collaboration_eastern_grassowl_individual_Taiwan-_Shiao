@@ -74,26 +74,15 @@ list.files(here("data", "TAIGA_audio_event"),
 
 # Embedding wrangling -----------------------------------------------------
 
-list.files(here("data", "TAIGA_audio_event_embedding_files"),
-           full.names = TRUE,
-           recursive = TRUE) %>%
-  tibble(file = .) %>%
-  mutate(owl = str_extract(file, "(?<=TAIGA_audio_event/)[^/]+"),
-         site = str_split_i(file, "/", i = -2)) %>%
-  summarize(n_files = n(),
-            n_site = n_distinct(site),
-            .by = owl)
+embedding_folder <- here::here("data", "TAIGA_audio_event_embedding_files")
 
-
-
-embedding_files <- list.files(path = base_dir,
+embedding_files <- list.files(path = embedding_folder,
                               pattern = "\\.txt$",
                               recursive = TRUE,
                               full.names = TRUE)
 
 
-
-
+# Create big dataframe combining all the embeddings
 embeddings_df <- map_dfr(embedding_files, function(file_path) {
 
   df <- read_csv(file_path, col_names = FALSE, show_col_types = FALSE) %>%
@@ -113,16 +102,19 @@ embeddings_df <- map_dfr(embedding_files, function(file_path) {
 
 
 
+# paused here -------------------------------------------------------------
+
+
+
+
 # Extract matrix directly from the list-column
 feature_matrix <- do.call(rbind, embeddings_df$embeddings)
-
-# Check dimensions
 dim(feature_matrix) # Should be N rows x 1024 columns
 mode(feature_matrix) # "numeric"
 
 
 
-## UMAP
+# UMAP
 # 1. Run UMAP on the feature matrix
 set.seed(42)
 umap_out <- umap(feature_matrix)
@@ -147,6 +139,9 @@ ggplot(plot_df, aes(x = UMAP1, y = UMAP2, color = owl_species)) +
   )
 
 
+
+
+# other codes -------------------------------------------------------------
 
 
 
@@ -181,7 +176,15 @@ audio_metadata_filtered %>%
 
 
 
-
+list.files(embedding_folder,
+           full.names = TRUE,
+           recursive = TRUE) %>%
+  tibble(file = .) %>%
+  mutate(owl = str_extract(file, "(?<=TAIGA_audio_event/)[^/]+"),
+         site = str_split_i(file, "/", i = -2)) %>%
+  summarize(n_files = n(),
+            n_site = n_distinct(site),
+            .by = owl)
 
 
 
