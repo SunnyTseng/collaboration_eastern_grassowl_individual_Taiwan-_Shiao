@@ -117,20 +117,6 @@ build_audio_metadata <- function(video_folder,
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 extract_audio_events <- function(audio_folder,
                                  threshold_detection) {
 

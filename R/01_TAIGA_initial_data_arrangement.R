@@ -39,11 +39,7 @@ write_csv(metadata_all, here("data", "taiga_audio_metadata_test.csv"))
 
 # extract events within the long acoustics - remove silence  --------------
 
-
-extract_audio_events(audio_folder = here("data", "TAIGA_audio"), threshold = 20)
-
-
-
+# test how the detection works
 if (visualize) {
   sound <- readWave(audio_file)
 
@@ -53,6 +49,27 @@ if (visualize) {
                 threshold = threshold_detection,
                 flim = c(0.5, 5.5))
 }
+
+# run all the extractions
+extract_audio_events(audio_folder = here("data", "TAIGA_audio"), threshold = 20)
+
+
+
+
+
+
+
+## check the number of files in each folder (owl)
+list.files(here("data", "TAIGA_audio_event"),
+           full.names = TRUE,
+           recursive = TRUE) %>%
+  tibble(file = .) %>%
+  mutate(owl = str_extract(file, "(?<=TAIGA_audio_event/)[^/]+"),
+         site = str_split_i(file, "/", i = -2)) %>%
+  summarize(n_files = n(),
+            n_site = n_distinct(site),
+            .by = owl) # note there is one folder include sounds that is not insect vocal type
+
 
 
 
