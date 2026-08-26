@@ -164,33 +164,28 @@ extract_audio_events <- function(audio_folder,
                                hold.time = 1500) # merge selection if less than 1 sec in gap
 
   detection_cleaned <- detection %>%
-    rowwise() %>%
-    mutate(orig_duration = end - start) %>%
-
     # Drop detections shorter than 3 seconds
-    filter(orig_duration >= 3) %>%
+    rowwise() %>%
+    filter(duration >= 3)
 
+  if (nrow(detection_cleaned) == 0) {
+    message(paste("No detections found for file:", audio_file))
+    next
+  }
+
+  detection_cleaned_1 <- detection_cleaned %>%
     # Calculate the number of 3-second chunks needed to cover the original duration
-    mutate(n_clips = floor(orig_duration / 3),
-
-           # Midpoint of the overall detected call
+    mutate(n_clips = floor(duration / 3),
            midpoint = (start + end) / 2,
-
-           # Total span required to place n contiguous 3-second chunks (n * 3)
            total_clips_duration = n_clips * 3,
-
-           # Start time for the block of chunks, centered on the call midpoint
            block_start = midpoint - (total_clips_duration / 2)) %>%
-
     # Generate the individual 3-second start/end pairs
     reframe(sound.files = sound.files,
             call_id = row_number(),
             clip_index = 1:n_clips,
             start = block_start + (clip_index - 1) * 3,
             end = block_start + clip_index * 3) %>%
-
     # Boundary Safeguards: Ensure windows stay within [0, 15.3] seconds
-    # Shift right if starting before 0s
     mutate(shift_right = if_else(start < 0, 0 - start, 0),
            start = start + shift_right,
            end = end + shift_right,
@@ -198,27 +193,33 @@ extract_audio_events <- function(audio_folder,
            start = start - shift_left,
            end = end - shift_left,
            duration = end - start) %>%
-
-    # Mutate audio file info
-    mutate(audio_file) %>%
-
     # Final clean up
-    select(call_id, clip_index, start, end, duration, audio_file)
+    select(call_id, clip_index, start, end, duration)
 
 
+  for (i in 1:nrow(detection_cleaned_1)) {
 
-  for (i in 1:nrow(detection_cleaned)) {
+    # Clip the audio
+    wave <- readWave(audio_file)
+    clip <- extractWave(wave,
+                        from = detection_cleaned_1$start[i],
+                        to = detection_cleaned_1$end[i],
+                        xunit = "time")
 
-    wave <- readWave(detection_cleaned$audio_file[i])
+    # Map audio path to target audio event path
+    audio_event_file <- audio_file %>%
+      str_replace("TAIGA_audio", "TAIGA_audio_event") %>%
+      str_replace(".wav", paste0("_", detection_cleaned_1$clip_index[i], ".wav"))
 
-    chunk <- extractWave(wave,
-                         from = detection_cleaned$start[i],
-                         to = detection_cleaned$end[i], xunit = "time")
+    target_dir <- dirname(audio_event_file)
+    if (!dir.exists(target_dir)) {
+      dir.create(target_dir, recursive = TRUE)
+    }
 
-    chunk_filename <- paste0(tools::file_path_sans_ext(basename(detection_cleaned$audio_file[i])),
-                             "_chunk_", detection_cleaned$chunk_index[i], ".wav")
+    # Write the file
+    writeWave(clip, audio_event_file)
 
-    writeWave(chunk, file.path(dirname(detection_cleaned$audio_file[i]), chunk_filename))
+
   }
 
 
