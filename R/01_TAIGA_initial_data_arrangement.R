@@ -54,12 +54,7 @@ if (visualize) {
 extract_audio_events(audio_folder = here("data", "TAIGA_audio"), threshold = 20)
 
 
-
-
-
-
-
-## check the number of files in each folder (owl)
+## check the number of detections in each folder (owl)
 list.files(here("data", "TAIGA_audio_event"),
            full.names = TRUE,
            recursive = TRUE) %>%
@@ -72,10 +67,84 @@ list.files(here("data", "TAIGA_audio_event"),
 
 
 
+# extract the embeddings --------------------------------------------------
+
+# temporary run on the BirdNET GUI
+
+
+# Embedding wrangling -----------------------------------------------------
+
+list.files(here("data", "TAIGA_audio_event_embedding_files"),
+           full.names = TRUE,
+           recursive = TRUE) %>%
+  tibble(file = .) %>%
+  mutate(owl = str_extract(file, "(?<=TAIGA_audio_event/)[^/]+"),
+         site = str_split_i(file, "/", i = -2)) %>%
+  summarize(n_files = n(),
+            n_site = n_distinct(site),
+            .by = owl)
+
+
+
+embedding_files <- list.files(path = base_dir,
+                              pattern = "\\.txt$",
+                              recursive = TRUE,
+                              full.names = TRUE)
 
 
 
 
+embeddings_df <- map_dfr(embedding_files, function(file_path) {
+
+  df <- read_csv(file_path, col_names = FALSE, show_col_types = FALSE) %>%
+    # 1. Pack all numeric feature columns (X1:X1024) into a single list-column
+    nest(embeddings = starts_with("X")) %>%
+    # 2. Convert each row's 1024 features from a 1-row data frame to a numeric vector
+    mutate(embeddings = map(embeddings, as.numeric)) %>%
+    # 3. Add metadata columns
+    mutate(
+      file_name = path_file(file_path),
+      owl_species = str_split_i(file_path, "/", i = -3),
+      segment_id = row_number()
+    )
+
+}, .id = "source_file_index") %>%
+  select(file_name, owl_species, segment_id, everything(), -source_file_index)
+
+
+
+# Extract matrix directly from the list-column
+feature_matrix <- do.call(rbind, embeddings_df$embeddings)
+
+# Check dimensions
+dim(feature_matrix) # Should be N rows x 1024 columns
+mode(feature_matrix) # "numeric"
+
+
+
+## UMAP
+# 1. Run UMAP on the feature matrix
+set.seed(42)
+umap_out <- umap(feature_matrix)
+
+# 2. Add UMAP dimensions back to the original dataframe containing owl_species
+plot_df <- embeddings_df %>%
+  mutate(
+    UMAP1 = umap_out$layout[, 1],
+    UMAP2 = umap_out$layout[, 2]
+  )
+
+# 3. Plot using your owl ID / species column
+ggplot(plot_df, aes(x = UMAP1, y = UMAP2, color = owl_species)) +
+  geom_point(alpha = 0.8, size = 2.5) +
+  scale_color_brewer(palette = "Set1") +
+  theme_minimal(base_size = 12) +
+  labs(
+    title = "BirdNET Audio Embedding Separation",
+    x = "UMAP Dimension 1",
+    y = "UMAP Dimension 2",
+    color = "Owl ID"
+  )
 
 
 
