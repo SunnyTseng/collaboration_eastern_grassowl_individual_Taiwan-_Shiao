@@ -6,27 +6,95 @@ source(here::here("R", "00_functions_packages.R"))
 
 
 
+
+# data exploration --------------------------------------------------------
+
+video_root <- here::here("data", "TAIGA_video")
+
+## check the number of folders - 5
+folder_list <- list.dirs(path = video_root,
+                         full.names = TRUE,
+                         recursive = FALSE)
+
+## check the number of videos in each folder
+tibble(folder_path = folder_list) %>%
+  mutate(folder_name = basename(folder_path),
+         total_videos = map_int(folder_path,
+                                ~{list.files(path = .x,
+                                             pattern = "\\.mp4$",
+                                             recursive = TRUE,
+                                             ignore.case = TRUE) %>% length()})) %>%
+  select(folder_name, total_videos)
+
+
+
+
 # extract audio, datetime from video ------------------------------------------------
 
-extract_audio_files(video_folder = "E:/2026_eastern_grassowl_Taiwan/TAIGA_video")
+extract_audio_files(video_folder = here("data", "TAIGA_video"))
 
-metadata_all <- build_audio_metadata(video_folder = "E:/2026_eastern_grassowl_Taiwan/TAIGA_video",
-                                     audio_folder = "E:/2026_eastern_grassowl_Taiwan/TAIGA_audio")
+metadata_all <- build_audio_metadata(video_folder = here("data", "TAIGA_video"),
+                                     audio_folder = here("data", "TAIGA_audio"))
 
-write_csv(metadata_all, here("data", "taiga_audio_metadata_5_owls.csv"))
+write_csv(metadata_all, here("data", "taiga_audio_metadata_test.csv"))
 
 
 
 # extract events within the long acoustics - remove silence  --------------
 
-audio_data <- read_csv(here("data", "taiga_audio_metadata_5_owls.csv"))
+audio_metadata <- read_csv(here("data", "taiga_audio_metadata_test.csv"))
 
-event_detections <- map2_df(audio_data$filepath_audio,
-                            audio_data$audio_id,
+## remove the audios that is not "insect call" type of vocalization
+audio_metadata_filtered <- audio_metadata %>%
+  filter(site != "non_insect")
+
+## check time of the day
+audio_metadata_filtered$datetime %>%
+  hour() %>%
+  unique() %>%
+  sort()
+
+## check owl & site summary
+audio_metadata_filtered %>%
+  group_by(owl_id, site) %>%
+  summarize(audios = n())
+
+
+
+
+
+
+
+
+
+
+# break -------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+## extract the audio events from the long audio files
+event_metadata <- map_df(.x = audio_metadata_filtered$filepath_audio,
+                         .f ~= build_audio_events_metadata(.x,
+                                                           threshold_detection = 20,
+                                                           visualize = FALSE))
+
+
+
+event_detections <- map2_df(audio_metadata_filtered$filepath_audio,
+                            audio_metadata_filtered$audio_id,
                             function(path, id) {
                               extract_audio_events(path, threshold_detection = 20, visualize = FALSE) %>%
                                 as_tibble() %>%
                                 mutate(audio_id = id)})
+
+
+
 
 metadata_event_detections <- event_detections %>%
   left_join(audio_data, by = "audio_id") %>%

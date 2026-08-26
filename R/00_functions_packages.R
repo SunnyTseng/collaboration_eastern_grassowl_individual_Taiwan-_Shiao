@@ -27,78 +27,6 @@ library(birdnetTools)
 
 # functions ---------------------------------------------------------------
 
-extract_audio_metadata <- function(video_folder,
-                                   extraction = TRUE) {
-
-  # create empty folder for extracted audio
-  audio_folder <- sub("video", "audio", video_folder)
-
-  if (!dir.exists(audio_folder)) {
-    dir.create(audio_folder, recursive = TRUE)
-  }
-
-  # create empty tibble for metadata
-  output_file <- tibble()
-
-  # list all the video files
-  video_files <- list.files(path = video_folder,
-                            pattern = "\\.mp4$",
-                            full.names = TRUE,
-                            ignore.case = TRUE,
-                            recursive = TRUE)
-
-
-
-  # The main loop to process each video file
-  for (video_file in video_files) {
-
-    # 1. extract audio
-    audio_file <- video_file %>%
-      str_replace("TAIGA_video", "TAIGA_audio") %>%
-      str_replace("\\.[^.]+$", ".wav")
-
-    target_dir <- dirname(audio_file)
-
-    if (!dir.exists(target_dir)) {
-      dir.create(target_dir, recursive = TRUE)
-    }
-
-    # run the conversion
-    if(extraction == TRUE){
-      av_audio_convert(video_file, audio_file)
-    } else {
-      cat("Audio extraction skipped for:", basename(video_file), "\n")
-    }
-
-
-    # 2. extract date and time and other metadata
-    video_info <- mediainfo_query(file = video_file,
-                                  section = "General",
-                                  parameters = c("Encoded_Date", "Duration", "FileSize"))
-    audio_info <- mediainfo_query(file = audio_file,
-                                  section = "Audio",
-                                  parameters = c("SamplingRate", "Channels", "BitDepth", "Format"))
-    file_info <- c(video_info, audio_info)
-
-    output_file <- bind_rows(output_file, file_info)
-  }
-
-
-  # the final metadata table with cleaned column names and selected columns
-  av_file_metadata <- output_file %>%
-    clean_names() %>%
-    rename(datetime = encoded_date,
-           filepath_video = file_1,
-           filepath_audio = file_5) %>%
-    mutate(site = str_split_i(filepath_video, "/", -2) %>% str_extract("\\p{Han}+"),
-           owl_id = str_split_i(filepath_video, "/", 4) %>% str_extract("[A-Za-z0-9]+")) %>%
-    select(owl_id, site, datetime, duration, sampling_rate, channels, bit_depth, format,
-           filepath_video, filepath_audio)
-
-  return(av_file_metadata)
-}
-
-
 extract_audio_files <- function(video_folder,
                                 audio_folder = sub("video", "audio", video_folder)) {
 
@@ -180,7 +108,7 @@ build_audio_metadata <- function(video_folder,
            filepath_video = file_1,
            filepath_audio = file_5) %>%
     mutate(site = str_split_i(filepath_video, "/", -2) %>% str_extract("\\p{Han}+"),
-           owl_id = str_split_i(filepath_video, "/", 4) %>% str_extract("[A-Za-z0-9]+"),
+           owl_id = str_split_i(filepath_video, "/", 5) %>% str_extract("[A-Za-z0-9]+"),
            audio_id = paste(owl_id, "-", site, "-", datetime)) %>%
     select(owl_id, site, datetime, audio_id, duration, sampling_rate, channels, bit_depth, format,
            filepath_video, filepath_audio)
@@ -189,9 +117,29 @@ build_audio_metadata <- function(video_folder,
 }
 
 
-extract_audio_events <- function(audio_file,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+extract_audio_events <- function(audio_folder,
+                                 audio_event_folder = sub("audio", "audio_event", audio_folder)
                                  threshold_detection,
                                  visualize = FALSE) {
+
+  # Mirror target structure in the audio repository
+  if (!dir.exists(audio_event_folder)) {
+    dir.create(audio_event_folder, recursive = TRUE)
+  }
 
   file_name <- basename(audio_file)
   folder_path <- dirname(audio_file)
@@ -214,38 +162,106 @@ extract_audio_events <- function(audio_file,
   }
 
 
+  detection_cleaned <- detection %>%
+    mutate(orig_duration = end - start) %>%
+    # Rule 1: Drop detections shorter than 3 seconds
+    filter(orig_duration >= 3) %>%
+    rowwise() %>%
+    mutate(n_chunks = case_when(orig_duration < 6  ~ 1,
+                                orig_duration < 9  ~ 2,
+                                orig_duration < 12 ~ 3,
+                                orig_duration <= 15 ~ 4,
+                                TRUE ~ floor(orig_duration / 3)), # fallback for > 15s
 
-  # 1. Calculate original durations and midpoints
-  orig_duration <- detection$end - detection$start
-  midpoints <- (detection$start + detection$end) / 2
+           # Midpoint of the overall detected call
+           midpoint = (start + end) / 2,
 
-  # 2. Determine target duration based on original duration, rounded up to the nearest second
-  target_duration <- ceiling(orig_duration)
+           # Total span required to place n contiguous 3-second chunks (n * 3)
+           total_chunks_duration = n_chunks * 3,
 
-  target_duration <- pmax(target_duration, 3)
-  target_duration <- pmin(target_duration, 15)
+           # Start time for the block of chunks, centered on the call midpoint
+           block_start = midpoint - (total_chunks_duration / 2)) %>%
 
-  # 3. Expand the start and end windows symmetrically around the midpoints
-  detection$start <- midpoints - (target_duration / 2)
-  detection$end   <- midpoints + (target_duration / 2)
+    # Rule 2 & 3: Generate the individual 3-second start/end pairs
+    reframe(sound.files = sound.files,
+            call_id = row_number(),
+            chunk_index = 1:n_chunks,
+            start = block_start + (chunk_index - 1) * 3,
+            end = block_start + chunk_index * 3) %>%
 
-  # 4. Handle FRONT clipping: If start < 0, shift window right to start at 0
-  below_zero <- detection$start < 0
-  if (any(below_zero)) {
-    detection$start[below_zero] <- 0
-    detection$end[below_zero]   <- target_duration[below_zero]
+    # Boundary Safeguards: Ensure windows stay within [0, 15.3] seconds
+    mutate(
+      # Shift right if starting before 0s
+      shift_right = if_else(start < 0, 0 - start, 0),
+      start = start + shift_right,
+      end = end + shift_right,
+      # Shift left if ending past file duration (15.3s)
+      shift_left = if_else(end > 15.3, end - 15.3, 0),
+      start = start - shift_left,
+      end = end - shift_left,
+      duration = end - start) %>%
+
+    # Mutate audio file info
+    mutate(audio_file) %>%
+
+    # Final clean up
+    select(audio_file, sound.files, call_id, chunk_index, start, end, duration)
+
+
+
+  for (i in 1:nrow(detection_cleaned)) {
+
+    wave <- readWave(detection_cleaned$audio_file[i])
+
+    chunk <- extractWave(wave,
+                         from = detection_cleaned$start[i],
+                         to = detection_cleaned$end[i], xunit = "time")
+
+    chunk_filename <- paste0(tools::file_path_sans_ext(basename(detection_cleaned$audio_file[i])),
+                             "_chunk_", detection_cleaned$chunk_index[i], ".wav")
+
+    writeWave(chunk, file.path(dirname(detection_cleaned$audio_file[i]), chunk_filename))
   }
 
-  # 5. Handle BACK clipping: If end > 15, shift window left to end at 15
-  #    (Replace 15 with a dynamic max duration if your files vary in length)
-  past_end <- detection$end > 15.3
-  if (any(past_end)) {
-    detection$end[past_end]   <- 15.3
-    detection$start[past_end] <- 15.3 - target_duration[past_end]
-  }
 
-  # 6. Recalculate final duration column for warbleR/ohun consistency
-  detection$duration <- detection$end - detection$start
 
-  return(detection)
+  # # 1. Calculate original durations and midpoints
+  # orig_duration <- detection$end - detection$start
+  # midpoints <- (detection$start + detection$end) / 2
+  #
+  # # 2. Determine target duration based on original duration, rounded up to the nearest second
+  # target_duration <- ceiling(orig_duration)
+  #
+  # target_duration <- pmax(target_duration, 3)
+  # target_duration <- pmin(target_duration, 15)
+  #
+  # # 3. Expand the start and end windows symmetrically around the midpoints
+  # detection$start <- midpoints - (target_duration / 2)
+  # detection$end   <- midpoints + (target_duration / 2)
+  #
+  # # 4. Handle FRONT clipping: If start < 0, shift window right to start at 0
+  # below_zero <- detection$start < 0
+  # if (any(below_zero)) {
+  #   detection$start[below_zero] <- 0
+  #   detection$end[below_zero]   <- target_duration[below_zero]
+  # }
+  #
+  # # 5. Handle BACK clipping: If end > 15, shift window left to end at 15
+  # #    (Replace 15 with a dynamic max duration if your files vary in length)
+  # past_end <- detection$end > 15.3
+  # if (any(past_end)) {
+  #   detection$end[past_end]   <- 15.3
+  #   detection$start[past_end] <- 15.3 - target_duration[past_end]
+  # }
+  #
+  # # 6. Recalculate final duration column for warbleR/ohun consistency
+  # detection$duration <- detection$end - detection$start
+
+  return(detection_cleaned)
 }
+
+
+
+
+
+

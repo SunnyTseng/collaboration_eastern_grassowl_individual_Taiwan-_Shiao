@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Sunny Tseng">
-<meta name="dcterms.date" content="2026-06-24">
+<meta name="dcterms.date" content="2026-08-24">
 
 <title>Initial exploration</title>
 <style>
@@ -100,7 +100,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">June 24, 2026</p>
+      <p class="date">August 24, 2026</p>
     </div>
   </div>
   
@@ -130,7 +130,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="extract-audios-from-video" class="level2">
 <h2 class="anchored" data-anchor-id="extract-audios-from-video">Extract audios from video</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>video_root <span class="ot">&lt;-</span> <span class="st">"E:/2026_eastern_grassowl_Taiwan/TAIGA_video"</span></span>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>video_root <span class="ot">&lt;-</span> here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"data"</span>, <span class="st">"TAIGA_video"</span>)</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>folder_list <span class="ot">&lt;-</span> <span class="fu">list.dirs</span>(<span class="at">path =</span> video_root,</span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>                         <span class="at">full.names =</span> <span class="cn">TRUE</span>,</span>
@@ -143,7 +143,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dir_tree</span>(video_root, <span class="at">recurse =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>E:/2026_eastern_grassowl_Taiwan/TAIGA_video
+<pre><code>E:/Ch8_eastern_grassowl_individual/data/TAIGA_video
 ├── 土庫北A89
 ├── 土庫南A50
 ├── 有利A84
@@ -208,8 +208,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># this chunk takes about one minute to run</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>metadata_all <span class="ot">&lt;-</span> <span class="fu">build_audio_metadata</span>(<span class="at">video_folder =</span> <span class="st">"E:/2026_eastern_grassowl_Taiwan/TAIGA_video"</span>,</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">audio_folder =</span> <span class="st">"E:/2026_eastern_grassowl_Taiwan/TAIGA_audio"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>metadata_all <span class="ot">&lt;-</span> <span class="fu">build_audio_metadata</span>(<span class="at">video_folder =</span> here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"data"</span>, <span class="st">"TAIGA_video"</span>),</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">audio_folder =</span> here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"data"</span>, <span class="st">"TAIGA_audio"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">Look at head</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">Look at tail</a></li></ul>
@@ -221,12 +221,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <pre><code># A tibble: 6 × 11
   owl_id site   datetime      audio_id duration sampling_rate channels bit_depth
   &lt;chr&gt;  &lt;chr&gt;  &lt;chr&gt;         &lt;chr&gt;       &lt;int&gt;         &lt;int&gt;    &lt;int&gt;     &lt;int&gt;
-1 A89    土庫北 2025-07-23 1… A89 - 土…    15333         44100        1        16
-2 A89    土庫北 2025-07-23 2… A89 - 土…    15333         44100        1        16
-3 A89    土庫北 2025-08-07 1… A89 - 土…    15333         44100        1        16
-4 A89    土庫北 2025-08-07 1… A89 - 土…    15333         44100        1        16
-5 A89    土庫北 2025-08-14 1… A89 - 土…    15333         44100        1        16
-6 A89    土庫北 2025-02-07 0… A89 - 土…    15333         44100        1        16
+1 TAIGA  土庫北 2025-07-23 1… TAIGA -…    15333         44100        1        16
+2 TAIGA  土庫北 2025-07-23 2… TAIGA -…    15333         44100        1        16
+3 TAIGA  土庫北 2025-08-07 1… TAIGA -…    15333         44100        1        16
+4 TAIGA  土庫北 2025-08-07 1… TAIGA -…    15333         44100        1        16
+5 TAIGA  土庫北 2025-08-14 1… TAIGA -…    15333         44100        1        16
+6 TAIGA  土庫北 2025-02-07 0… TAIGA -…    15333         44100        1        16
 # ℹ 3 more variables: format &lt;chr&gt;, filepath_video &lt;chr&gt;, filepath_audio &lt;chr&gt;</code></pre>
 </div>
 </div>
@@ -238,12 +238,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <pre><code># A tibble: 6 × 11
   owl_id site       datetime  audio_id duration sampling_rate channels bit_depth
   &lt;chr&gt;  &lt;chr&gt;      &lt;chr&gt;     &lt;chr&gt;       &lt;int&gt;         &lt;int&gt;    &lt;int&gt;     &lt;int&gt;
-1 R19    順揚砂石場 2024-09-… R19 - 順…    15333         44100        1        16
-2 R19    順揚砂石場 2024-12-… R19 - 順…    15333         44100        1        16
-3 R19    順揚砂石場 2024-12-… R19 - 順…    15333         44100        1        16
-4 R19    順揚砂石場 2024-12-… R19 - 順…    15333         44100        1        16
-5 R19    順揚砂石場 2024-12-… R19 - 順…    15333         44100        1        16
-6 R19    順揚砂石場 2025-01-… R19 - 順…    15333         44100        1        16
+1 TAIGA  順揚砂石場 2024-09-… TAIGA -…    15333         44100        1        16
+2 TAIGA  順揚砂石場 2024-12-… TAIGA -…    15333         44100        1        16
+3 TAIGA  順揚砂石場 2024-12-… TAIGA -…    15333         44100        1        16
+4 TAIGA  順揚砂石場 2024-12-… TAIGA -…    15333         44100        1        16
+5 TAIGA  順揚砂石場 2024-12-… TAIGA -…    15333         44100        1        16
+6 TAIGA  順揚砂石場 2025-01-… TAIGA -…    15333         44100        1        16
 # ℹ 3 more variables: format &lt;chr&gt;, filepath_video &lt;chr&gt;, filepath_audio &lt;chr&gt;</code></pre>
 </div>
 </div>
@@ -260,18 +260,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(owl_id, site) <span class="sc">%&gt;%</span></span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">audios =</span> <span class="fu">n</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 8 × 3
-# Groups:   owl_id [5]
+<pre><code># A tibble: 6 × 3
+# Groups:   owl_id [1]
   owl_id site       audios
   &lt;chr&gt;  &lt;chr&gt;       &lt;int&gt;
-1 172    有利砂石場      1
-2 172    順揚砂石場     19
-3 A50    土庫南         18
-4 A84    有利           16
-5 A89    土庫北         16
-6 R19    有利砂石場      9
-7 R19    非蟲叫          2
-8 R19    順揚砂石場      8</code></pre>
+1 TAIGA  土庫北         16
+2 TAIGA  土庫南         18
+3 TAIGA  有利           16
+4 TAIGA  有利砂石場     10
+5 TAIGA  非蟲叫          2
+6 TAIGA  順揚砂石場     27</code></pre>
 </div>
 </div>
 </div>

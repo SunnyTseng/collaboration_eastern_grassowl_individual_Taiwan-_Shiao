@@ -28,7 +28,7 @@ source(here::here("R", "00_functions_packages.R"))
 ## Extract audios from video
 
 ```{r}
-video_root <- "E:/2026_eastern_grassowl_Taiwan/TAIGA_video"
+video_root <- here::here("data", "TAIGA_video")
 
 folder_list <- list.dirs(path = video_root,
                          full.names = TRUE,
@@ -75,8 +75,8 @@ The `build_audio_metadata()` function gathers and organizes all the technical de
 
 # this chunk takes about one minute to run
 
-metadata_all <- build_audio_metadata(video_folder = "E:/2026_eastern_grassowl_Taiwan/TAIGA_video",
-                                     audio_folder = "E:/2026_eastern_grassowl_Taiwan/TAIGA_audio")
+metadata_all <- build_audio_metadata(video_folder = here::here("data", "TAIGA_video"),
+                                     audio_folder = here::here("data", "TAIGA_audio"))
 
 ```
 
