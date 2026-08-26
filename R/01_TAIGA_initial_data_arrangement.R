@@ -7,12 +7,23 @@ source(here::here("R", "00_functions_packages.R"))
 
 # data exploration --------------------------------------------------------
 
-video_root <- here::here("data", "TAIGA_video")
+video_folder <- here::here("data", "TAIGA_video")
 
-## check the number of folders - 5
-list.dirs(path = video_root,
+## check the number of folders (owls)
+list.dirs(path = video_folder,
           full.names = TRUE,
           recursive = FALSE)
+
+## check the number of files in each folder (owl)
+list.files(video_folder,
+           full.names = TRUE,
+           recursive = TRUE) %>%
+  tibble(file = .) %>%
+  mutate(owl = str_extract(file, "(?<=TAIGA_video/)[^/]+"),
+         site = str_split_i(file, "/", i = -2)) %>%
+  summarize(n_files = n(),
+            n_site = n_distinct(site),
+            .by = owl) # note there is one folder include sounds that is not insect vocal type
 
 
 # extract audio, datetime from video ------------------------------------------------
@@ -27,6 +38,31 @@ write_csv(metadata_all, here("data", "taiga_audio_metadata_test.csv"))
 
 
 # extract events within the long acoustics - remove silence  --------------
+
+
+extract_audio_events(audio_folder = here("data", "TAIGA_audio"), threshold = 20)
+
+
+
+if (visualize) {
+  sound <- readWave(audio_file)
+
+  label_spectro(wave = sound,
+                detection = detection,
+                envelope = TRUE,
+                threshold = threshold_detection,
+                flim = c(0.5, 5.5))
+}
+
+
+
+
+
+
+
+
+
+
 
 audio_metadata <- read_csv(here("data", "taiga_audio_metadata_test.csv"))
 
