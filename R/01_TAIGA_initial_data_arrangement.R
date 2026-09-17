@@ -28,10 +28,10 @@ list.files(video_folder,
 
 # extract audio, datetime from video ------------------------------------------------
 
-extract_audio_files(video_folder = here("data", "TAIGA_video"))
-
-metadata_all <- build_audio_metadata(video_folder = here("data", "TAIGA_video"),
-                                     audio_folder = here("data", "TAIGA_audio"))
+# extract_audio_files(video_folder = here("data", "TAIGA_video"))
+#
+# metadata_all <- build_audio_metadata(video_folder = here("data", "TAIGA_video"),
+#                                      audio_folder = here("data", "TAIGA_audio"))
 
 # write_csv(metadata_all, here("data", "taiga_audio_metadata_test.csv"))
 
@@ -51,7 +51,7 @@ if (visualize) {
 }
 
 # run all the extractions
-extract_audio_events(audio_folder = here("data", "TAIGA_audio"), threshold = 20)
+#extract_audio_events(audio_folder = here("data", "TAIGA_audio"), threshold = 20)
 
 
 ## check the number of detections in each folder (owl)
@@ -61,8 +61,7 @@ list.files(here("data", "TAIGA_audio_event"),
   tibble(file = .) %>%
   mutate(owl = str_extract(file, "(?<=TAIGA_audio_event/)[^/]+"),
          site = str_split_i(file, "/", i = -2)) %>%
-  summarize(n_files = n(),
-            n_site = n_distinct(site),
+  summarize(n_clips = n(),
             .by = owl) # note there is one folder include sounds that is not insect vocal type
 
 
