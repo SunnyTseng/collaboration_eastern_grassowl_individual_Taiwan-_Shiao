@@ -40,6 +40,16 @@ editor: visual
 
 ![](images/clipboard-1467168338.png)
 
+## 2026 Sep.17
+
+-   Added one figure to visualize the owl vocalization across time (day and hour)
+
+-   But need more data to be visually meaningful, I think.
+
+-   Still waiting for more video to come - have contacted Shiao for more data.
+
+![](images/clipboard-3051757191.png)
+
 ## Big Picture
 
 1.  Extract audio from video, with metadata
