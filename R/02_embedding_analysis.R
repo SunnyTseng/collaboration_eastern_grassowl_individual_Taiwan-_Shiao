@@ -1,6 +1,19 @@
 
 
 
+# library -----------------------------------------------------------------
+
+library(tidyverse)
+library(here)
+library(umap)
+
+
+# import data -------------------------------------------------------------
+
+load(here("data", "taiga_audio_event_embeddings_df.rds"))
+
+data_audio <- read_csv(here("data", "taiga_audio_metadata_test.csv"))
+
 
 
 # making figures ----------------------------------------------------------
@@ -23,6 +36,9 @@ plot_df <- embeddings_df %>%
     UMAP1 = umap_out$layout[, 1],
     UMAP2 = umap_out$layout[, 2]
   )
+
+
+
 
 # 3. Plot using your owl ID / species column
 ggplot(plot_df, aes(x = UMAP1, y = UMAP2, color = owl_species)) +

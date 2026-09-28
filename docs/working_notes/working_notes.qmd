@@ -50,6 +50,12 @@ editor: visual
 
 ![](images/clipboard-3051757191.png)
 
+## 2026 Sep.28
+
+-   Catch up with Shiao
+
+-   Start a manuscript document
+
 ## Big Picture
 
 1.  Extract audio from video, with metadata
