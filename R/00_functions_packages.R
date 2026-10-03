@@ -89,15 +89,11 @@ build_audio_metadata <- function(video_folder,
                                   parameters = c("Encoded_Date", "Duration", "FileSize"))
 
     # 2. Query audio parameters safely
-    if (file.exists(audio_files[i])) {
-      audio_info <- mediainfo_query(file = audio_files[i],
-                                    section = "Audio",
-                                    parameters = c("SamplingRate", "Channels", "BitDepth", "Format"))
-    } else {
-      # Fallback to prevent breaking bind_rows if audio doesn't exist yet
-      audio_info <- list(SamplingRate = NA, Channels = NA, BitDepth = NA, Format = NA)
-    }
+    audio_info <- mediainfo_query(file = audio_files[i],
+                                  section = "Audio",
+                                  parameters = c("SamplingRate", "Channels", "BitDepth", "Format"))
 
+    # combine video and audio data
     file_info <- c(video_info, audio_info)
     output_file <- bind_rows(output_file, file_info)
   }
@@ -108,8 +104,8 @@ build_audio_metadata <- function(video_folder,
     rename(datetime = encoded_date,
            filepath_video = file_1,
            filepath_audio = file_5) %>%
-    mutate(site = str_split_i(filepath_video, "/", -2) %>% str_extract("\\p{Han}+"),
-           owl_id = str_split_i(filepath_video, "/", 5) %>% str_extract("[A-Za-z0-9]+"),
+    mutate(site = str_split_i(filepath_video, "/", -2),
+           owl_id = str_split_i(filepath_video, "/", -3),
            audio_id = paste(owl_id, "-", site, "-", datetime)) %>%
     select(owl_id, site, datetime, audio_id, duration, sampling_rate, channels, bit_depth, format,
            filepath_video, filepath_audio)
