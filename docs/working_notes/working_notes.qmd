@@ -56,6 +56,20 @@ editor: visual
 
 -   Start a manuscript document
 
+## 2026 Oct.2
+
+-   Received the dataset from Shiao
+
+-   Rename, rearranged the folder from Chinese to English
+
+    -   土庫北 - TKN
+
+    -   土庫南 - TKS
+
+    -   有利 - YOLI
+
+    -   順揚 - SHENYAN
+
 ## Big Picture
 
 1.  Extract audio from video, with metadata
