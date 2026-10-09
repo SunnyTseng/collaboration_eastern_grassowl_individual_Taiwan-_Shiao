@@ -70,6 +70,180 @@ editor: visual
 
     -   順揚 - SHENYAN
 
+## 2026 Oct.9
+
+-   During event extraction by energy detection, there are several audios with no event reported. Perhaps we could try using BirdNET directly for the extraction. Here is the list of audios don't have events detected (all under data/TAIGA_audio_2 directory):
+
+    -   172/SHENYAN/04290148.wav
+
+    -   172/SHENYAN/04290160.wav
+
+    -   172/SHENYAN/05010244.wav
+
+    -   172/SHENYAN/05040716.wav
+
+    -   172/SHENYAN/05050740.wav
+
+    -   172/SHENYAN/05070892.wav
+
+    -   172/SHENYAN/05070896.wav
+
+    -   172/SHENYAN/05090273.wav
+
+    -   172/SHENYAN/05110337.wav
+
+    -   172/SHENYAN/05150134.wav
+
+    -   172/SHENYAN/05150138.wav
+
+    -   172/SHENYAN/05150142.wav
+
+    -   172/SHENYAN/05150154.wav
+
+    -   172/SHENYAN/05170286.wav
+
+    -   172/SHENYAN/05240857.wav
+
+    -   172/SHENYAN/05240869.wav
+
+    -   172/SHENYAN/05240873.wav
+
+    -   172/SHENYAN/05270126.wav
+
+    -   172/SHENYAN/09210008.wav
+
+    -   172/SHENYAN/10030640.wav
+
+    -   172/SHENYAN/10060912.wav
+
+    -   172/SHENYAN/10090217.wav
+
+    -   172/SHENYAN/10120277.wav
+
+    -   172/SHENYAN/10120281.wav
+
+    -   172/SHENYAN/10130377.wav
+
+    -   172/SHENYAN/10190076.wav
+
+    -   172/SHENYAN/10200096.wav
+
+    -   172/SHENYAN/11300112.wav
+
+    -   172/SHENYAN/41_20240508_200222_XXEnh6Xc.wav
+
+    -   172/SHENYAN/41_20241029_040758_ZxtkrzG4.wav
+
+    -   172/SHENYAN/41_20241130_011329_Z27WuBUR.wav
+
+    -   A50/TKS/04030767.wav
+
+    -   A50/TKS/04090443.wav
+
+    -   A50/TKS/05140051.wav
+
+    -   A50/TKS/05240799.wav
+
+    -   A50/TKS/05250066.wav
+
+    -   A50/TKS/05250494.wav
+
+    -   A50/TKS/05260510.wav
+
+    -   A50/TKS/06010715.wav
+
+    -   A50/TKS/06100157.wav
+
+    -   A50/TKS/06110177.wav
+
+    -   A50/TKS/06150577.wav
+
+    -   A50/TKS/06160709.wav
+
+    -   A50/TKS/06160713.wav
+
+    -   A50/TKS/06160717.wav
+
+    -   A50/TKS/06160725.wav
+
+    -   A50/TKS/07050658.wav
+
+    -   A50/TKS/3_20240402_201828_mUothT5a.wav
+
+    -   A50/TKS/3_20240403_234130_8ggAdEMh.wav
+
+    -   A50/TKS/3_20240403_234755_SMJMfC5Z.wav
+
+    -   A50/TKS/3_20240704_041824_7jSm9ixW.wav
+
+    -   A50/TKS/3_20240705_204727_bcuBPANQ.wav
+
+    -   A50/TKS/3_20250129_225135_gNbiAZB3.wav
+
+    -   A84/YOLI/03030949.wav
+
+    -   A84/YOLI/03050957.wav
+
+    -   A84/YOLI/03050977.wav
+
+    -   A84/YOLI/03130511.wav
+
+    -   A84/YOLI/07240248.wav
+
+    -   A84/YOLI/07290337.wav
+
+    -   A84/YOLI/08030871.wav
+
+    -   A84/YOLI/08050298.wav
+
+    -   A84/YOLI/10010516.wav
+
+    -   A84/YOLI/10190216.wav
+
+    -   A84/YOLI/10220656.wav
+
+    -   A84/YOLI/10280197.wav
+
+    -   A84/YOLI/11110562.wav
+
+    -   A84/YOLI/11220871.wav
+
+    -   A89/TKN/05260294.wav
+
+    -   A89/TKN/06160562.wav
+
+    -   A89/TKN/08070046.wav
+
+    -   A89/TKN/08070050.wav
+
+    -   A89/TKN/59_20250207_033052_VvUtejUA.wav
+
+    -   A89/TKN/59_20250212_051942_HUj2ZmcY.wav
+
+    -   A89/TKN/59_20250508_035935_BVLGYPJk.wav
+
+    -   B32/YOLI/03020621.wav
+
+    -   B32/YOLI/03030941.wav
+
+    -   B32/YOLI/07260604.wav
+
+    -   B32/YOLI/09100063.wav
+
+    -   R19/SHENYAN/41_20240902_011556_ncoJ9SHK.wav
+
+    -   R19/SHENYAN/41_20241201_201423_gxmyJBVg.wav
+
+    -   R19/SHENYAN/41_20241229_045627_g8wgK3er.wav
+
+    -   R19/SHENYAN/41_20250101_051615_T6zd9YTL.wav
+
+    -   R19/SHENYAN/41_20250104_184750_hxMdodHT.wav
+
+    -   R19/SHENYAN/41_20250113_044703_BsWWUKEA.wav
+
+    -   R19/YOLI/6_20240229_185500_GViKkNNi.wav
+
 ## Big Picture
 
 1.  Extract audio from video, with metadata
