@@ -1,0 +1,44 @@
+---
+title: "Individual Identification of Eastern Grass Owls from Vocalizations: Camera-Trap Validation at Raptor Perches and BirdNET Embeddings"
+format: html
+---
+
+## Abstract
+
+## Introduction
+
+
+
+## Methods
+
+### Study area
+
+### Eastern Grass Owls
+
+
+### Audio data and visual validation from camera traps
+
+
+
+```{r}
+#| echo: false
+# in the .qmd chunk
+
+library(here)
+
+load(here("docs", "tables", "table_owl_recordings.rda"))
+table_owl_recordings
+```
+
+
+
+### BirdNET embeddings
+
+### Training and testing the classifier
+
+
+## Results
+
+## Discussion
+
+## Conclustion

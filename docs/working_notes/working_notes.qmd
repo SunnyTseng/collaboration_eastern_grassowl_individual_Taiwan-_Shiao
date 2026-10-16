@@ -244,9 +244,18 @@ editor: visual
 
     -   R19/YOLI/6_20240229_185500_GViKkNNi.wav
 
+## Oct.16
+
+-   Train BirdNET individual models directly using raw data, and with the "smart" detection format
+
+-   Start the manuscript
+
+-   
+
 ## Big Picture
 
 1.  Extract audio from video, with metadata
 2.  Extract clips of sounds from audio (by BirdNET GUI)
 3.  Extract BirdNET embedding from each vocalization for each owls
 4.  Run multi-variance analysis to see the similarity
+
