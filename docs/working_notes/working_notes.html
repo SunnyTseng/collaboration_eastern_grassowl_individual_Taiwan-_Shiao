@@ -94,7 +94,158 @@ ul.task-list li input[type="checkbox"] {
 <section id="jun.18" class="level2">
 <h2 class="anchored" data-anchor-id="jun.18">2026 Jun.18</h2>
 <ul>
-<li>Finished the function extracting audios and metadata from video folders</li>
+<li>Finished the “function” extracting audios and metadata from video folders</li>
+</ul>
+</section>
+<section id="aug.26" class="level2">
+<h2 class="anchored" data-anchor-id="aug.26">2026 Aug.26</h2>
+<ul>
+<li><p>Created the embedding separation, using only 3 sec clips full with vocalization. Seems like there are some separation.</p></li>
+<li><p>Two clusters of orange - potentially from the “non insect” vocalization. Need to remove</p></li>
+</ul>
+<p><img src="images/clipboard-1467168338.png" class="img-fluid"></p>
+</section>
+<section id="sep.17" class="level2">
+<h2 class="anchored" data-anchor-id="sep.17">2026 Sep.17</h2>
+<ul>
+<li><p>Added one figure to visualize the owl vocalization across time (day and hour)</p></li>
+<li><p>But need more data to be visually meaningful, I think.</p></li>
+<li><p>Still waiting for more video to come - have contacted Shiao for more data.</p></li>
+</ul>
+<p><img src="images/clipboard-3051757191.png" class="img-fluid"></p>
+</section>
+<section id="sep.28" class="level2">
+<h2 class="anchored" data-anchor-id="sep.28">2026 Sep.28</h2>
+<ul>
+<li><p>Catch up with Shiao</p></li>
+<li><p>Start a manuscript document</p></li>
+</ul>
+</section>
+<section id="oct.2" class="level2">
+<h2 class="anchored" data-anchor-id="oct.2">2026 Oct.2</h2>
+<ul>
+<li><p>Received the dataset from Shiao</p></li>
+<li><p>Rename, rearranged the folder from Chinese to English</p>
+<ul>
+<li><p>土庫北 - TKN</p></li>
+<li><p>土庫南 - TKS</p></li>
+<li><p>有利 - YOLI</p></li>
+<li><p>順揚 - SHENYAN</p></li>
+</ul></li>
+</ul>
+</section>
+<section id="oct.9" class="level2">
+<h2 class="anchored" data-anchor-id="oct.9">2026 Oct.9</h2>
+<ul>
+<li><p>During event extraction by energy detection, there are several audios with no event reported. Perhaps we could try using BirdNET directly for the extraction. Here is the list of audios don’t have events detected (all under data/TAIGA_audio_2 directory):</p>
+<ul>
+<li><p>172/SHENYAN/04290148.wav</p></li>
+<li><p>172/SHENYAN/04290160.wav</p></li>
+<li><p>172/SHENYAN/05010244.wav</p></li>
+<li><p>172/SHENYAN/05040716.wav</p></li>
+<li><p>172/SHENYAN/05050740.wav</p></li>
+<li><p>172/SHENYAN/05070892.wav</p></li>
+<li><p>172/SHENYAN/05070896.wav</p></li>
+<li><p>172/SHENYAN/05090273.wav</p></li>
+<li><p>172/SHENYAN/05110337.wav</p></li>
+<li><p>172/SHENYAN/05150134.wav</p></li>
+<li><p>172/SHENYAN/05150138.wav</p></li>
+<li><p>172/SHENYAN/05150142.wav</p></li>
+<li><p>172/SHENYAN/05150154.wav</p></li>
+<li><p>172/SHENYAN/05170286.wav</p></li>
+<li><p>172/SHENYAN/05240857.wav</p></li>
+<li><p>172/SHENYAN/05240869.wav</p></li>
+<li><p>172/SHENYAN/05240873.wav</p></li>
+<li><p>172/SHENYAN/05270126.wav</p></li>
+<li><p>172/SHENYAN/09210008.wav</p></li>
+<li><p>172/SHENYAN/10030640.wav</p></li>
+<li><p>172/SHENYAN/10060912.wav</p></li>
+<li><p>172/SHENYAN/10090217.wav</p></li>
+<li><p>172/SHENYAN/10120277.wav</p></li>
+<li><p>172/SHENYAN/10120281.wav</p></li>
+<li><p>172/SHENYAN/10130377.wav</p></li>
+<li><p>172/SHENYAN/10190076.wav</p></li>
+<li><p>172/SHENYAN/10200096.wav</p></li>
+<li><p>172/SHENYAN/11300112.wav</p></li>
+<li><p>172/SHENYAN/41_20240508_200222_XXEnh6Xc.wav</p></li>
+<li><p>172/SHENYAN/41_20241029_040758_ZxtkrzG4.wav</p></li>
+<li><p>172/SHENYAN/41_20241130_011329_Z27WuBUR.wav</p></li>
+<li><p>A50/TKS/04030767.wav</p></li>
+<li><p>A50/TKS/04090443.wav</p></li>
+<li><p>A50/TKS/05140051.wav</p></li>
+<li><p>A50/TKS/05240799.wav</p></li>
+<li><p>A50/TKS/05250066.wav</p></li>
+<li><p>A50/TKS/05250494.wav</p></li>
+<li><p>A50/TKS/05260510.wav</p></li>
+<li><p>A50/TKS/06010715.wav</p></li>
+<li><p>A50/TKS/06100157.wav</p></li>
+<li><p>A50/TKS/06110177.wav</p></li>
+<li><p>A50/TKS/06150577.wav</p></li>
+<li><p>A50/TKS/06160709.wav</p></li>
+<li><p>A50/TKS/06160713.wav</p></li>
+<li><p>A50/TKS/06160717.wav</p></li>
+<li><p>A50/TKS/06160725.wav</p></li>
+<li><p>A50/TKS/07050658.wav</p></li>
+<li><p>A50/TKS/3_20240402_201828_mUothT5a.wav</p></li>
+<li><p>A50/TKS/3_20240403_234130_8ggAdEMh.wav</p></li>
+<li><p>A50/TKS/3_20240403_234755_SMJMfC5Z.wav</p></li>
+<li><p>A50/TKS/3_20240704_041824_7jSm9ixW.wav</p></li>
+<li><p>A50/TKS/3_20240705_204727_bcuBPANQ.wav</p></li>
+<li><p>A50/TKS/3_20250129_225135_gNbiAZB3.wav</p></li>
+<li><p>A84/YOLI/03030949.wav</p></li>
+<li><p>A84/YOLI/03050957.wav</p></li>
+<li><p>A84/YOLI/03050977.wav</p></li>
+<li><p>A84/YOLI/03130511.wav</p></li>
+<li><p>A84/YOLI/07240248.wav</p></li>
+<li><p>A84/YOLI/07290337.wav</p></li>
+<li><p>A84/YOLI/08030871.wav</p></li>
+<li><p>A84/YOLI/08050298.wav</p></li>
+<li><p>A84/YOLI/10010516.wav</p></li>
+<li><p>A84/YOLI/10190216.wav</p></li>
+<li><p>A84/YOLI/10220656.wav</p></li>
+<li><p>A84/YOLI/10280197.wav</p></li>
+<li><p>A84/YOLI/11110562.wav</p></li>
+<li><p>A84/YOLI/11220871.wav</p></li>
+<li><p>A89/TKN/05260294.wav</p></li>
+<li><p>A89/TKN/06160562.wav</p></li>
+<li><p>A89/TKN/08070046.wav</p></li>
+<li><p>A89/TKN/08070050.wav</p></li>
+<li><p>A89/TKN/59_20250207_033052_VvUtejUA.wav</p></li>
+<li><p>A89/TKN/59_20250212_051942_HUj2ZmcY.wav</p></li>
+<li><p>A89/TKN/59_20250508_035935_BVLGYPJk.wav</p></li>
+<li><p>B32/YOLI/03020621.wav</p></li>
+<li><p>B32/YOLI/03030941.wav</p></li>
+<li><p>B32/YOLI/07260604.wav</p></li>
+<li><p>B32/YOLI/09100063.wav</p></li>
+<li><p>R19/SHENYAN/41_20240902_011556_ncoJ9SHK.wav</p></li>
+<li><p>R19/SHENYAN/41_20241201_201423_gxmyJBVg.wav</p></li>
+<li><p>R19/SHENYAN/41_20241229_045627_g8wgK3er.wav</p></li>
+<li><p>R19/SHENYAN/41_20250101_051615_T6zd9YTL.wav</p></li>
+<li><p>R19/SHENYAN/41_20250104_184750_hxMdodHT.wav</p></li>
+<li><p>R19/SHENYAN/41_20250113_044703_BsWWUKEA.wav</p></li>
+<li><p>R19/YOLI/6_20240229_185500_GViKkNNi.wav</p></li>
+</ul></li>
+</ul>
+</section>
+<section id="oct.16" class="level2">
+<h2 class="anchored" data-anchor-id="oct.16">Oct.16</h2>
+<ul>
+<li><p>Train BirdNET individual models directly using raw data, and with the “smart” detection format</p>
+<ul>
+<li><p>Train on 2023 - 2025, test on 2026 (files arranged, trained finished)</p></li>
+<li><p>5 fold validation (files arranged)</p></li>
+</ul></li>
+<li><p>Start the manuscript, finished one section of methods and two tables</p></li>
+<li><p>To do:</p>
+<ul>
+<li><p>(Test and Train split)</p></li>
+<li><p>Train the 5 fold data split</p></li>
+<li><p>Evaluate the models from 2 senerios (run the trained model on test dataset)</p></li>
+<li><p>Extract embeddings from known detections (manual detection or BirdNET detection) for the visuals</p></li>
+<li><p>(Quality of training data)</p></li>
+<li><p>BirdNET model for grass owl –&gt; detections –&gt; BirdNET model for individual?</p></li>
+<li><p>Manual detctions -&gt; BirdNET model for individual (?)</p></li>
+</ul></li>
 </ul>
 </section>
 <section id="big-picture" class="level2">

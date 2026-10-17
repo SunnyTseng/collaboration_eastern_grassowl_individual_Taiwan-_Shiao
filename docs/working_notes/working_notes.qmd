@@ -248,9 +248,27 @@ editor: visual
 
 -   Train BirdNET individual models directly using raw data, and with the "smart" detection format
 
--   Start the manuscript
+    -   Train on 2023 - 2025, test on 2026 (files arranged, trained finished)
 
--   
+    -   5 fold validation (files arranged)
+
+-   Start the manuscript, finished one section of methods and two tables
+
+-   To do:
+
+    -   (Test and Train split)
+
+    -   Train the 5 fold data split
+
+    -   Evaluate the models from 2 senerios (run the trained model on test dataset)
+
+    -   Extract embeddings from known detections (manual detection or BirdNET detection) for the visuals
+
+    -   (Quality of training data)
+
+    -   BirdNET model for grass owl –\> detections –\> BirdNET model for individual?
+
+    -   Manual detctions -\> BirdNET model for individual (?)
 
 ## Big Picture
 
@@ -258,4 +276,3 @@ editor: visual
 2.  Extract clips of sounds from audio (by BirdNET GUI)
 3.  Extract BirdNET embedding from each vocalization for each owls
 4.  Run multi-variance analysis to see the similarity
-
