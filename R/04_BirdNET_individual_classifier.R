@@ -41,10 +41,12 @@ for (i in 1:nrow(test)) {
 }
 
 
-# train the classifier using BirdNET
+# train and evaluate the classifier using BirdNET
 
 ### Currently run on BirdNET GUI, using the train tab
+### run on BirdNET GUI, using batch analysis tab
 
+# get test restuls
 
 
 # strategy 2 - 5 fold validation ------------------------------------------
@@ -84,5 +86,10 @@ for (k in 1:5) {
 }
 
 
+# train and evaluate the classifier using BirdNET
 
+### Currently run on BirdNET GUI, using the train tab
+### run on BirdNET GUI, using batch analysis tab
+
+# get test restuls
 

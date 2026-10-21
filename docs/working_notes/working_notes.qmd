@@ -256,19 +256,19 @@ editor: visual
 
 -   To do:
 
-    -   (Test and Train split)
+    (Test and Train split)
 
-    -   Train the 5 fold data split
+    -   [x] Train the 5 fold data split
 
-    -   Evaluate the models from 2 senerios (run the trained model on test dataset)
+    -   [ ] Evaluate the models from 2 senerios (run the trained model on test dataset)
 
-    -   Extract embeddings from known detections (manual detection or BirdNET detection) for the visuals
+    -   [ ] Extract embeddings from known detections (manual detection or BirdNET detection) for the visuals
 
-    -   (Quality of training data)
+    (Quality of training data)
 
-    -   BirdNET model for grass owl –\> detections –\> BirdNET model for individual?
+    -   [ ] BirdNET model for grass owl –\> detections –\> BirdNET model for individual?
 
-    -   Manual detctions -\> BirdNET model for individual (?)
+    -   [ ] Manual detctions -\> BirdNET model for individual (?)
 
 ## Big Picture
 
