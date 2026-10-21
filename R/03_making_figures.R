@@ -36,7 +36,7 @@ table_owl_recordings <- data_audio %>%
 
 gtsave(table_owl_recordings,
        here("docs", "tables",
-            "table_owl_recordings.docx"))
+            "table_owl_recordings.rtf"))
 
 
 

@@ -270,6 +270,16 @@ editor: visual
 
     -   [ ] Manual detctions -\> BirdNET model for individual (?)
 
+## Oct.20
+
+-   Finished running all the fold training... But!!
+
+-   Need to redo everything!! Because there are Chinese characters in the file name. Also, there are none-insect calls mixed in the folder! Why...
+
+-   Re-edited the video folder –\> extract audio -\> extract event -\> do the file shuffle again...
+
+-   
+
 ## Big Picture
 
 1.  Extract audio from video, with metadata
