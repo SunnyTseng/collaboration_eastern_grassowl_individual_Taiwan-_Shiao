@@ -10,193 +10,90 @@ library(umap)
 
 # import data -------------------------------------------------------------
 
-load(here("data", "taiga_audio_event_embeddings_df.rds"))
+data_embedding <- read_csv(here("data",
+                                "BirdNET_embedding_from_manual_event",
+                                "embeddings.csv"))
 
-data_audio <- read_csv(here("data", "taiga_audio_metadata_test.csv"))
-
-
+audio_metadata <- read_csv(here("data", "taiga_audio_metadata.csv"))
 
 # wrangling ---------------------------------------------------------------
 
-test <- read_csv(here("data",
-                      "BirdNET_embedding_from_manual_event",
-                      "embeddings.csv"))
+# combine the embedding data with the audio metadata
+data_embedding_cleaned <- data_embedding %>%
+  mutate(owl_id = str_split_i(file_path, "\\\\", -3),
+         site = str_split_i(file_path, "\\\\", -2),
+         filepath_audio = file_path %>%
+           str_replace_all("\\\\", "/") %>%
+           str_replace("TAIGA_audio_event_2", "TAIGA_audio_2") %>%
+           str_remove("_\\d+(?=\\.wav$)")) %>%
+  left_join(audio_metadata, by = c("owl_id", "site", "filepath_audio"))
+
+# make the matrix ready to run UMAP
+feature_matrix <- data_embedding_cleaned$embedding |>
+  strsplit(",") |>
+  lapply(as.numeric) |>
+  do.call(what = rbind)
+
+dim(feature_matrix)   # should be 440 x 1024
+anyNA(feature_matrix) # should be FALSE
+
 
 
 # making figures ----------------------------------------------------------
 
-# Extract matrix directly from the list-column
-feature_matrix <- do.call(rbind, embeddings_df$embeddings)
-dim(feature_matrix) # Should be N rows x 1024 columns
-mode(feature_matrix) # "numeric"
 
-
-
-# UMAP
-# 1. Run UMAP on the feature matrix
+library(uwot)
 set.seed(42)
-umap_out <- umap(feature_matrix)
+um <- umap(feature_matrix, n_neighbors = 15, min_dist = 0.1)
 
-# 2. Add UMAP dimensions back to the original dataframe containing owl_species
-plot_df <- embeddings_df %>%
-  mutate(
-    UMAP1 = umap_out$layout[, 1],
-    UMAP2 = umap_out$layout[, 2]
-  )
+plot_df <- data_embedding_cleaned |>
+  mutate(UMAP1 = um[, 1], UMAP2 = um[, 2])
 
-
-
-
-# 3. Plot using your owl ID / species column
-ggplot(plot_df, aes(x = UMAP1, y = UMAP2, color = owl_species)) +
+data_embedding_cleaned |>
+  mutate(UMAP1 = um[, 1], UMAP2 = um[, 2]) |>
+  ggplot(aes(UMAP1, UMAP2, color = owl_id)) +
   geom_point(alpha = 0.8, size = 2.5) +
-  scale_color_brewer(palette = "Set1") +
-  theme_minimal(base_size = 12) +
-  labs(
-    title = "BirdNET Audio Embedding Separation",
-    x = "UMAP Dimension 1",
-    y = "UMAP Dimension 2",
-    color = "Owl ID"
-  )
+  theme_minimal(base_size = 12)
 
 
+library(cluster)
 
+owl <- factor(data_embedding_cleaned$owl_id)
+d <- dist(feature_matrix)
 
-# other codes -------------------------------------------------------------
+sil <- silhouette(as.integer(owl), d)
+mean(sil[, "sil_width"])                       # overall
+tapply(sil[, "sil_width"], owl, mean)          # per owl
 
 
+rec <- factor(data_embedding_cleaned$audio_id)
+sil_rec <- silhouette(as.integer(rec), d)
+mean(sil_rec[, "sil_width"])
 
-audio_metadata <- read_csv(here("data", "taiga_audio_metadata_test.csv"))
 
-## remove the audios that is not "insect call" type of vocalization
-audio_metadata_filtered <- audio_metadata %>%
-  filter(site != "non_insect")
 
-## check time of the day
-audio_metadata_filtered$datetime %>%
-  hour() %>%
-  unique() %>%
-  sort()
+keep <- data_embedding_cleaned |>
+  distinct(owl_id, audio_id) |>
+  count(owl_id) |>
+  filter(n >= 3) |>
+  pull(owl_id)
 
-## check owl & site summary
-audio_metadata_filtered %>%
-  group_by(owl_id, site) %>%
-  summarize(audios = n())
+idx <- which(data_embedding_cleaned$owl_id %in% keep)
 
+D2   <- as.matrix(d)[idx, idx]
+owl2 <- droplevels(owl[idx])
+rec2 <- data_embedding_cleaned$audio_id[idx]
+k <- 5
 
+pred <- sapply(seq_along(idx), function(i) {
+  ok <- which(rec2 != rec2[i])
+  nn <- ok[order(D2[i, ok])[1:k]]
+  names(which.max(table(owl2[nn])))
+})
 
+mean(pred == owl2)
+max(prop.table(table(owl2)))   # chance
+table(truth = owl2, predicted = factor(pred, levels = levels(owl2)))
 
-
-
-
-
-
-
-# break -------------------------------------------------------------------
-
-
-
-
-list.files(embedding_folder,
-           full.names = TRUE,
-           recursive = TRUE) %>%
-  tibble(file = .) %>%
-  mutate(owl = str_extract(file, "(?<=TAIGA_audio_event/)[^/]+"),
-         site = str_split_i(file, "/", i = -2)) %>%
-  summarize(n_files = n(),
-            n_site = n_distinct(site),
-            .by = owl)
-
-
-
-
-## extract the audio events from the long audio files
-event_metadata <- map_df(.x = audio_metadata_filtered$filepath_audio,
-                         .f ~= build_audio_events_metadata(.x,
-                                                           threshold_detection = 20,
-                                                           visualize = FALSE))
-
-
-
-event_detections <- map2_df(audio_metadata_filtered$filepath_audio,
-                            audio_metadata_filtered$audio_id,
-                            function(path, id) {
-                              extract_audio_events(path, threshold_detection = 20, visualize = FALSE) %>%
-                                as_tibble() %>%
-                                mutate(audio_id = id)})
-
-
-
-
-metadata_event_detections <- event_detections %>%
-  left_join(audio_data, by = "audio_id") %>%
-  rename(clip_length = duration.x) %>%
-  mutate(clip_id = paste0(audio_id, "-", selec)) %>%
-  select(owl_id, site, datetime, selec, start, end, clip_length, filepath_audio, audio_id, clip_id)
-
-write_csv(metadata_event_detections, here("data", "taiga_audio_events_metadata_5_owls.csv"))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# others ------------------------------------------------------------------
-
-
-
-
-# 1. Read your full 1-minute wave file
-wave_obj <- readWave(test)
-
-# 2. Extract the exact start and end sample points from your data list
-start_sample <- detections$data$event_start[1]
-end_sample   <- detections$data$event_end[1]
-
-# 3. Slice the wave object directly using those indices
-vocalization_clip <- wave_obj[start_sample:end_sample]
-
-# 4. Save your extracted call
-writeWave(vocalization_clip, "D:/2026_eastern_grassowl_Taiwan/prepared_clips/extracted_call.wav")
-
-
-# specify input audio (top-level folder) with "audio" in the name
-audio_folders <- list.dirs("D:/2026_eastern_grassowl_Taiwan",
-                           recursive = FALSE,
-                           full.names = TRUE) %>%
-  grep("audio", ., value = TRUE, ignore.case = TRUE)
-
-
-# run BirdNET on each audio folder
-
-for (audio_folder in audio_folders) {
-  cat("Processing audio folder:", audio_folder, "\n")
-
-  files <- list.files(audio_folder,
-                      pattern = "\\.wav$",
-                      full.names = TRUE,
-                      recursive = TRUE)
-}
-
-
-
-
-# run through BirdNET to get the detections -------------------------------
-
-# initializing a BirdNET model
-model <- load_birdnet(type = 'acoustic',
-                      version = '2.4',
-                      backend = 'tf',
-                      precision = 'fp32', # what does this actually mean vs 'fp16' or 'int8'
-                      lang = 'en_us')
 
 
