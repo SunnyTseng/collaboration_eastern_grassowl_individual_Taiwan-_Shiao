@@ -179,8 +179,8 @@ plot_dat <- counts |>
 
 ggplot(plot_dat, aes(x = 1, xend = 0, y = owl_y, yend = site_y)) +
   geom_sigmoid(aes(linewidth = n,
-                   group = interaction(owl_id, site),
-                   color = owl_id),
+                   group = interaction(owl_id, site)),
+               colour = "lightgrey",
                alpha = 0.5) +
   geom_text(aes(x = 1.03, label = owl_id), angle = 90, hjust = 0, size = 3) +
   geom_text(aes(x = -0.03, y = site_y, label = site), vjust = 1, size = 3.5) +
