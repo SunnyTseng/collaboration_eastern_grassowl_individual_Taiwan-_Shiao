@@ -116,7 +116,32 @@ gtsave(table_birdnet_parameters,
             "table_birdnet_parameters.rtf"))
 
 
+# BirdNET batch analysis parameters ---------------------------------------
 
+table_birdnet_inference <- tibble::tribble(
+  ~Parameter,                        ~Definition,                                                                                                  ~Setting,
+  "Model",                           "Model used for analysis; a custom classifier was trained on the individual owl IDs",                        "Custom classifier (CustomClassifier_cv_1.tflite)",
+  "Species list",                    "Filters which classes are included in the output; all classes were kept",                                   "All species",
+  "Use top N species",               "Reports only the N classes with the highest confidence scores for each segment",                            "No",
+  "Minimum confidence",              "Detections with confidence below this value are discarded",                                                 "0.1",
+  "Sensitivity",                     "Adjusts the distribution of prediction scores; higher values give higher scores, and 1 is the default",     "1.0",
+  "Overlap (s)",                     "Overlap between consecutive 3-s analysis segments; 0 means no overlap",                                     "0",
+  "Merge consecutive detections",    "Number of consecutive detections of a class that are merged into one; 1 means no merging",                  "1",
+  "Audio speed modification",        "Changes the playback speed of the audio; 1.0 means no change",                                              "1.0",
+  "Minimum bandpass frequency (Hz)", "Lowest frequency kept; sound below this value is filtered out",                                             "0",
+  "Maximum bandpass frequency (Hz)", "Highest frequency kept; sound above this value is filtered out",                                             "15,000"
+) %>%
+  gt() %>%
+  cols_align(align = "left") %>%
+  cols_width(Parameter ~ px(230),
+             Definition ~ px(420),
+             Setting ~ px(200)) %>%
+  tab_style(style = cell_text(weight = "bold"),
+            locations = cells_column_labels())
+
+gtsave(table_birdnet_inference,
+       here("docs", "tables",
+            "table_birdnet_inference.rtf"))
 
 
 
