@@ -40,6 +40,54 @@ gtsave(table_owl_recordings,
 
 
 
+# data_summary_figure -----------------------------------------------------
+
+# get the data
+data_audio <- read_csv(here("data", "taiga_audio_metadata.csv"))
+
+# order owls by total recordings (largest first)
+owl_order <- data_audio %>%
+  group_by(owl_id) %>%
+  summarise(total = n()) %>%
+  arrange(total)
+
+# making figure
+fig_owl_recordings <- data_audio %>%
+  mutate(year = factor(year(datetime), levels = 2023:2026)) %>%
+  count(owl_id, year) %>%
+  mutate(owl_id = factor(owl_id, levels = owl_order$owl_id)) %>%
+
+  # ggplot
+  ggplot(aes(x = owl_id, y = n, fill = year)) +
+  geom_col(width = 0.7, position = position_stack(reverse = TRUE)) +
+  geom_text(data = owl_order |> mutate(owl_id = factor(owl_id, levels = owl_id)),
+            aes(x = owl_id, y = total, label = total, fill = NULL),
+            hjust = -0.5, size = 3.5, inherit.aes = FALSE) +
+  # fine tune
+  scale_fill_viridis_d(option = "D", drop = FALSE) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.08))) +
+  labs(x = "Owl ID", y = "Number of recordings", fill = "Year") +
+  guides(fill = guide_legend(nrow = 1)) +
+  coord_flip() +
+  # theme settings
+  theme_bw(base_size = 12) +
+  theme(panel.grid.major.y = element_blank(),
+        legend.position = "inside",
+        legend.position.inside = c(0.65, 0.15),
+        legend.direction = "horizontal",
+        legend.background = element_rect(fill = "white", color = NA))
+
+fig_owl_recordings
+
+ggsave(fig_owl_recordings,
+       filename = here("docs",
+                       "figures",
+                       "fig_owl_recordings.png"),
+       width = 16,
+       height = 10,
+       units = "cm",
+       dpi = 300)
+
 
 # BirdNET training parameters ---------------------------------------------
 
