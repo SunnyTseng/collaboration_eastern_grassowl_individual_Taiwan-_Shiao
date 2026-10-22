@@ -16,6 +16,13 @@ data_audio <- read_csv(here("data", "taiga_audio_metadata_test.csv"))
 
 
 
+# wrangling ---------------------------------------------------------------
+
+test <- read_csv(here("data",
+                      "BirdNET_embedding_from_manual_event",
+                      "embeddings.csv"))
+
+
 # making figures ----------------------------------------------------------
 
 # Extract matrix directly from the list-column
