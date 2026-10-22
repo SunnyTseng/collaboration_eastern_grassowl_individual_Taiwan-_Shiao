@@ -46,9 +46,6 @@ library(uwot)
 set.seed(42)
 um <- umap(feature_matrix, n_neighbors = 15, min_dist = 0.1)
 
-plot_df <- data_embedding_cleaned |>
-  mutate(UMAP1 = um[, 1], UMAP2 = um[, 2])
-
 data_embedding_cleaned |>
   mutate(UMAP1 = um[, 1], UMAP2 = um[, 2]) |>
   ggplot(aes(UMAP1, UMAP2, color = owl_id)) +
@@ -56,44 +53,61 @@ data_embedding_cleaned |>
   theme_minimal(base_size = 12)
 
 
+
+
+# additional analysis -----------------------------------------------------
+
+# 0. Silhouette width
+
 library(cluster)
 
-owl <- factor(data_embedding_cleaned$owl_id)
-d <- dist(feature_matrix)
+dat <- data_embedding_cleaned |>
+  mutate(night = as.Date(ymd_hms(datetime) - hours(12)))
 
-sil <- silhouette(as.integer(owl), d)
-mean(sil[, "sil_width"])                       # overall
-tapply(sil[, "sil_width"], owl, mean)          # per owl
+# silhouette by night and by site
+sil_night <- silhouette(as.integer(factor(dat$night)), d)
+sil_site  <- silhouette(as.integer(factor(dat$site)), d)
+mean(sil_night[, "sil_width"])
+mean(sil_site[, "sil_width"])
 
+# keep owls with >= 3 nights
+keep <- dat |> distinct(owl_id, night) |> count(owl_id) |> filter(n >= 3) |> pull(owl_id)
+idx  <- which(dat$owl_id %in% keep)
 
-rec <- factor(data_embedding_cleaned$audio_id)
-sil_rec <- silhouette(as.integer(rec), d)
-mean(sil_rec[, "sil_width"])
-
-
-
-keep <- data_embedding_cleaned |>
-  distinct(owl_id, audio_id) |>
-  count(owl_id) |>
-  filter(n >= 3) |>
-  pull(owl_id)
-
-idx <- which(data_embedding_cleaned$owl_id %in% keep)
-
-D2   <- as.matrix(d)[idx, idx]
-owl2 <- droplevels(owl[idx])
-rec2 <- data_embedding_cleaned$audio_id[idx]
+D2     <- as.matrix(d)[idx, idx]
+owl2   <- droplevels(factor(dat$owl_id[idx]))
+night2 <- dat$night[idx]
 k <- 5
 
 pred <- sapply(seq_along(idx), function(i) {
-  ok <- which(rec2 != rec2[i])
+  ok <- which(night2 != night2[i])
   nn <- ok[order(D2[i, ok])[1:k]]
   names(which.max(table(owl2[nn])))
 })
+pred <- factor(pred, levels = levels(owl2))
 
-mean(pred == owl2)
-max(prop.table(table(owl2)))   # chance
-table(truth = owl2, predicted = factor(pred, levels = levels(owl2)))
+mean(pred == owl2)                                # accuracy
+max(prop.table(table(owl2)))                      # majority-class chance
+tab <- table(truth = owl2, predicted = pred)
+tab
+mean(diag(tab) / rowSums(tab))                    # balanced accuracy
 
 
+# 1. Variance partitioning (PERMANOVA)
+#
+# This is the cleanest single result. It asks how much of the distance structure is explained by owl, site, and night.
+#
+# Report R² for each term. If night and site explain more than owl, that is direct evidence that the unsupervised structure is mostly environment. Since clips from the same night aren’t independent, restrict the permutations by night (the strata argument), or treat the p-values cautiously and lean on the R² values.
 
+library(vegan)
+adonis2(d ~ owl_id + site + night, data = dat, by = "margin", permutations = 999)
+
+# 2. Clustering agreement
+#
+# Cluster without labels (k-means or hierarchical, with k = number of owls), then compare the clusters to each label set. If the ARI against night or site is higher than against owl, the clusters are following the environment.
+
+library(mclust)
+cl <- kmeans(prcomp(feature_matrix)$x[, 1:30], centers = 7, nstart = 25)$cluster
+adjustedRandIndex(cl, dat$owl_id)
+adjustedRandIndex(cl, dat$night)
+adjustedRandIndex(cl, dat$site)
