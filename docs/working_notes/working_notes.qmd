@@ -278,6 +278,32 @@ editor: visual
 
 -   Re-edited the video folder –\> extract audio -\> extract event -\> do the file shuffle again...
 
+## Oct.21
+
+-   A non-english character!!! Again!!! Errrrrrrrrrrrrrr. Two of them from owl B32
+
+-   Manually removed that recordings from audio_2 folder, all the training / testing split folders
+
+-   Need to re-run fold 1, fold 2 as these training datasets included that recordings! (luckily only two)...
+
+-   Need to re-run the audio metadata
+
+-   Embedding is okay as there are a lot of missed detection anyway :P
+
+## Oct.22
+
+-   To do:
+
+    -   [x] Re-ran the audio metadata
+
+    -   [ ] Re-ran the training on the 2 folds
+
+    -   [ ] Train the model based on full data
+
+    -   [ ] Run the full model on raw audio to get detections
+
+    -   [x] Re-access the audio numbers
+
 ## Big Picture
 
 1.  Extract audio from video, with metadata

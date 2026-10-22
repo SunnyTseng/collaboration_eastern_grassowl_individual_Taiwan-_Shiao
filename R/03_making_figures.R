@@ -5,6 +5,8 @@ library(tidyverse)
 library(here)
 library(gt)
 
+library(ggbump)
+
 
 # data summary ------------------------------------------------------------
 
@@ -36,7 +38,7 @@ table_owl_recordings <- data_audio %>%
 
 gtsave(table_owl_recordings,
        here("docs", "tables",
-            "table_owl_recordings.rtf"))
+            "table_owl_recordings.docx"))
 
 
 
@@ -158,4 +160,31 @@ test <- data_audio %>%
 
 
 
+# explore the audio numbers -----------------------------------------------
+
+
+# recordings per owl x site
+counts <- count(data_audio, owl_id, site)
+
+# put owls in order of their main site
+owl_order <- counts |>
+  slice_max(n, by = owl_id, with_ties = FALSE) |>
+  arrange(site, desc(n)) |>
+  pull(owl_id)
+
+# y positions for the left (owls) and right (sites)
+plot_dat <- counts |>
+  mutate(owl_y  = match(owl_id, owl_order),
+         site_y = scales::rescale(as.numeric(factor(site)), to = range(owl_y)))
+
+ggplot(plot_dat, aes(x = 1, xend = 0, y = owl_y, yend = site_y)) +
+  geom_sigmoid(aes(linewidth = n,
+                   group = interaction(owl_id, site),
+                   color = owl_id),
+               alpha = 0.5) +
+  geom_text(aes(x = 1.03, label = owl_id), angle = 90, hjust = 0, size = 3) +
+  geom_text(aes(x = -0.03, y = site_y, label = site), vjust = 1, size = 3.5) +
+  scale_linewidth(range = c(3, 10), name = "Recordings") +
+  coord_flip(xlim = c(-0.15, 1.2), clip = "off") +
+  theme_void()
 

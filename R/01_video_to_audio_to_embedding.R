@@ -30,18 +30,18 @@ list.files(video_folder,
 # extract audio files from video ------------------------------------------
 
 
-# extract_audio_files(video_folder = here("data", "TAIGA_video_2"))
-#
-# metadata_all <- build_audio_metadata(video_folder = here("data", "TAIGA_video_2"),
-#                                      audio_folder = here("data", "TAIGA_audio_2"))
-# write_csv(metadata_all, here("data", "taiga_audio_metadata.csv"))
+extract_audio_files(video_folder = here("data", "TAIGA_video_2"))
+
+metadata_all <- build_audio_metadata(video_folder = here("data", "TAIGA_video_2"),
+                                     audio_folder = here("data", "TAIGA_audio_2"))
+write_csv(metadata_all, here("data", "taiga_audio_metadata.csv"))
 
 
 
 
 # extract clips from audio ------------------------------------------------
 
-extract_audio_events(audio_folder = here("data", "TAIGA_audio_2"), threshold = 20)
+# extract_audio_events(audio_folder = here("data", "TAIGA_audio_2"), threshold = 20)
 
 ##test how the detection works
 # if (visualize) {
@@ -57,7 +57,7 @@ extract_audio_events(audio_folder = here("data", "TAIGA_audio_2"), threshold = 2
 # }
 
 # check the number of detections in each folder (owl)
-list.files(here("data", "TAIGA_audio_event"),
+list.files(here("data", "TAIGA_audio_event_2"),
            full.names = TRUE,
            recursive = TRUE) %>%
   tibble(file = .) %>%
