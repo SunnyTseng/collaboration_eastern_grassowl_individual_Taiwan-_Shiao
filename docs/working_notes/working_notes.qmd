@@ -296,13 +296,17 @@ editor: visual
 
     -   [x] Re-ran the audio metadata
 
-    -   [ ] Re-ran the training on the 2 folds
+    -   [x] Re-ran the training on the 2 folds
 
-    -   [ ] Train the model based on full data
+    -   [x] Train the model based on full data
 
-    -   [ ] Run the full model on raw audio to get detections
+    -   [x] Run the full model on raw audio to get detections
 
     -   [x] Re-access the audio numbers
+
+## Oct.29
+
+-   
 
 ## Big Picture
 
