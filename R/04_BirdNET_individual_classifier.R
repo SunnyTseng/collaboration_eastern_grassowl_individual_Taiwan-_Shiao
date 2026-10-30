@@ -10,7 +10,6 @@ library(here)
 data_audio <- read_csv(here("data", "taiga_audio_metadata.csv"))
 
 
-
 # strategy 1 - train on 2023 to 2024, test on 2026 ------------------------
 
 # Create a folder with train and test split
@@ -91,5 +90,8 @@ for (k in 1:5) {
 ### Currently run on BirdNET GUI, using the train tab
 ### run on BirdNET GUI, using batch analysis tab
 
-# get test restuls
+
+
+
+
 
