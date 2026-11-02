@@ -27,9 +27,15 @@ test_fold_clean <- test_fold |>
          audio_file = str_split_i(File, "\\\\", -1)) |>
   rename(predicted = `Common name`,
          start = `Start (s)`,
-         end = `End (s)`) |>
+         end = `End (s)`,
+         confidence = Confidence)
+
+
   left_join(audio_metadata, by = c("owl_id", "audio_file")) |>
-  select(site, datetime, audio_id, audio_file, start, end, predicted, owl_id, fold)
+  select(site, datetime, audio_id, audio_file, start, end, confidence, predicted, owl_id, fold)
+
+test_fold_clean_1 <- test_fold_clean |>
+
 
 
 # temporal test
@@ -40,9 +46,15 @@ test_temporal_clean <- test_temporal |>
          audio_file = str_split_i(File, "\\\\", -1)) |>
   rename(predicted = `Common name`,
          start = `Start (s)`,
-         end = `End (s)`) |>
+         end = `End (s)`,
+         confidence = Confidence) |>
   left_join(audio_metadata, by = c("owl_id", "audio_file")) |>
-  select(site, datetime, audio_id, audio_file, start, end, predicted, owl_id)
+  select(site, datetime, audio_id, audio_file, start, end, confidence, predicted, owl_id)
 
 
+
+# recording-level evaluation ----------------------------------------------
+
+test <- test_fold_clean %>%
+  group_by(audio_id)
 
