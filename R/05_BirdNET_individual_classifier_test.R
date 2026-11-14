@@ -161,29 +161,27 @@ test_temporal_recording <- test_temporal_1 %>%
 
 # recording level evaluation ----------------------------------------------
 
-
+# performance evaluation for temporal validation
 performance_temporal_recording <- evaluate_recordings(test_temporal_recording)
 
 performance_temporal_recording$overall
 performance_temporal_recording$per_owl
 plot_confmat(performance_temporal_recording$conf_mat)
 
-
+# for the ones without A82 because it will bias the results (A82 has only 1 recording and it's new to the dataset)
 performance_temporal_recording_n_A82 <- test_temporal_recording %>%
   filter(owl_id != "A82") %>%
   evaluate_recordings()
 
+# statistics
 performance_temporal_recording_n_A82$overall
 performance_temporal_recording_n_A82$per_owl
 
-
-
-
-
-fig_overall_performance <- performance_temporal_recording_n_A82$conf_mat %>%
+# plot - confusion matrix
+fig_temporal_performance_all <- performance_temporal_recording_n_A82$conf_mat %>%
   plot_confmat()
 
-
+# plot - precision / recall
 plot_df <- performance_temporal_recording_n_A82$per_owl |>
   mutate(owl_lab = paste0(owl, "\n(n = ", support, ")"),
          owl_lab = fct_reorder(owl_lab, -support)) |>   # most test recordings first
@@ -194,7 +192,7 @@ plot_df <- performance_temporal_recording_n_A82$per_owl |>
                          levels = c("precision", "recall"),
                          labels = c("Precision", "Recall")))
 
-fig_owl_performance <- ggplot(plot_df, aes(x = owl_lab, y = value, fill = metric)) +
+fig_temporal_performance_ind <- ggplot(plot_df, aes(x = owl_lab, y = value, fill = metric)) +
   geom_col(position = position_dodge(width = 0.8), width = 0.7) +
   geom_text(aes(label = sprintf("%.2f", value)),
             position = position_dodge(width = 0.8),
@@ -209,7 +207,8 @@ fig_owl_performance <- ggplot(plot_df, aes(x = owl_lab, y = value, fill = metric
   theme(legend.position = "bottom")
 
 
-fig_temporal_recording <- fig_overall_performance + fig_owl_performance +
+# combine figures
+fig_temporal_recording <- fig_overall_performance_all + fig_temporal_performance_ind +
   plot_annotation(tag_levels = "A") &
   theme(plot.tag = element_text(face = "bold", size = 14))
 
@@ -224,18 +223,53 @@ ggsave(here("docs", "figures", "fig_temporal_recording.png"),
 
 
 
-
-
-
-
-
-
-# others ------------------------------------------------------------------
-
+# performance evaluation for cross validation
 
 performance_fold_recording <- evaluate_recordings(test_fold_recording)
 
+# statistics
 performance_fold_recording$overall
 performance_fold_recording$per_owl
-plot_confmat(performance_fold_recording$conf_mat)
 
+# plot - confusion matrix
+fig_cv_performance_all <- performance_fold_recording$conf_mat %>%
+  plot_confmat()
+
+# plot - precision / recall
+plot_df_fold <- performance_fold_recording$per_owl |>
+  mutate(owl_lab = paste0(owl, "\n(n = ", support, ")"),
+         owl_lab = fct_reorder(owl_lab, -support)) |>   # most test recordings first
+  select(owl_lab, precision, recall) |>
+  pivot_longer(c(precision, recall),
+               names_to = "metric", values_to = "value") |>
+  mutate(metric = factor(metric,
+                         levels = c("precision", "recall"),
+                         labels = c("Precision", "Recall")))
+
+fig_cv_performance <- ggplot(plot_df_fold, aes(x = owl_lab, y = value, fill = metric)) +
+  geom_col(position = position_dodge(width = 0.8), width = 0.7) +
+  geom_text(aes(label = sprintf("%.2f", value)),
+            position = position_dodge(width = 0.8),
+            vjust = -0.4, size = 3.2) +
+
+  scale_fill_viridis_d(option = "D", begin = 0.25, end = 0.75) +
+  scale_y_continuous(breaks = seq(0, 1, 0.25)) +
+  coord_cartesian(ylim = c(0, 1.1), expand = FALSE) +
+
+  labs(x = "Owl ID", y = NULL, fill = NULL) +
+  theme_bw() +
+  theme(legend.position = "bottom")
+
+# combine figures
+fig_corss_validation <- fig_cv_performance_all + fig_cv_performance +
+  plot_annotation(tag_levels = "A") &
+  theme(plot.tag = element_text(face = "bold", size = 14))
+
+fig_corss_validation
+
+ggsave(here("docs", "figures", "fig_fold_recording.png"),
+       fig_corss_validation,
+       width = 23,
+       height = 14,
+       unit = "cm",
+       dpi = 300)
