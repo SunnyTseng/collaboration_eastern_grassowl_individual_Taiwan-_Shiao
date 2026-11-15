@@ -21,20 +21,31 @@ table_owl_recordings <- data_audio %>%
   complete(nesting(owl_id, sites), year = 2023:2026, fill = list(n = 0)) %>%
   pivot_wider(names_from = year, values_from = n) %>%
   rename(owls = owl_id) %>%
-  mutate(total = rowSums(across(`2023`:`2026`))) %>%
+  mutate(total = rowSums(across(`2023`:`2026`)),
+         past = rowSums(across(`2023`:`2025`)),
+         status_2026 = case_when(`2026` == 0 ~ "Not detected",
+                                 past == 0    ~ "New",
+                                 TRUE         ~ "Continuing"),
+         temporal = if_else(`2026` == 0 | past == 0, "No", "Yes"),
+         cv = if_else(owls == "A82", "No", "Yes")) %>%
   arrange(desc(total)) %>%
-  select(owls, sites, total, `2023`, `2024`, `2025`, `2026`) %>%
+  select(owls, sites, total, `2023`, `2024`, `2025`, `2026`,
+         status_2026, temporal, cv) %>%
 
   gt() %>%
   tab_spanner(label = "Recordings per year",
               columns = `2023`:`2026`) %>%
+  tab_spanner(label = "Included in evaluation",
+              columns = c(temporal, cv)) %>%
   cols_label(owls = "Owl ID",
              sites = "Sites",
-             total = "Total") %>%
+             total = "Total",
+             status_2026 = "Status in 2026",
+             temporal = "Temporal validation",
+             cv = "Cross-validation") %>%
   cols_align(align = "center", columns = -owls) %>%
   tab_style(style = cell_text(weight = "bold"),
             locations = cells_column_labels())
-
 
 gtsave(table_owl_recordings,
        here("docs", "tables",
@@ -122,8 +133,8 @@ gtsave(table_birdnet_parameters,
 
 table_birdnet_inference <- tibble::tribble(
   ~Parameter,                        ~Definition,                                                                                                  ~Setting,
-  "Model",                           "Model used for analysis; a custom classifier was trained on the individual owl IDs",                        "Custom classifier (CustomClassifier_cv_1.tflite)",
-  "Species list",                    "Filters which classes are included in the output; all classes were kept",                                   "All species",
+  "Model",                           "Model used for analysis; a custom classifier was trained on the individual owl IDs",                        "Custom classifier",
+  "Species list",                    "Filters which classes are included in the output; all classes were kept",                                   "All (individual owls)",
   "Use top N species",               "Reports only the N classes with the highest confidence scores for each segment",                            "No",
   "Minimum confidence",              "Detections with confidence below this value are discarded",                                                 "0.1",
   "Sensitivity",                     "Adjusts the distribution of prediction scores; higher values give higher scores, and 1 is the default",     "1.0",
@@ -143,7 +154,7 @@ table_birdnet_inference <- tibble::tribble(
 
 gtsave(table_birdnet_inference,
        here("docs", "tables",
-            "table_birdnet_inference.rtf"))
+            "table_birdnet_inference.docx"))
 
 
 
