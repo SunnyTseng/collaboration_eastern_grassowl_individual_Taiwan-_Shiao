@@ -171,8 +171,9 @@ test <- data_audio %>%
 
 
 
-# explore the audio numbers -----------------------------------------------
 
+
+# flowing figure showing owl versus site relationship ---------------------
 
 # recordings per owl x site
 counts <- count(data_audio, owl_id, site)
@@ -188,14 +189,25 @@ plot_dat <- counts |>
   mutate(owl_y  = match(owl_id, owl_order),
          site_y = scales::rescale(as.numeric(factor(site)), to = range(owl_y)))
 
-ggplot(plot_dat, aes(x = 1, xend = 0, y = owl_y, yend = site_y)) +
+fig_owl_site_history <- ggplot(plot_dat, aes(x = 1, xend = 0, y = owl_y, yend = site_y)) +
   geom_sigmoid(aes(linewidth = n,
                    group = interaction(owl_id, site)),
                colour = "lightgrey",
                alpha = 0.5) +
-  geom_text(aes(x = 1.03, label = owl_id), angle = 90, hjust = 0, size = 3) +
-  geom_text(aes(x = -0.03, y = site_y, label = site), vjust = 1, size = 3.5) +
+  geom_text(aes(x = 1.09, label = owl_id), size = 3.5, , fontface = "bold") +
+  geom_text(aes(x = -0.03, y = site_y, label = site), vjust = 1, size = 3.5, , fontface = "bold") +
   scale_linewidth(range = c(3, 10), name = "Recordings") +
   coord_flip(xlim = c(-0.15, 1.2), clip = "off") +
-  theme_void()
 
+  theme_void() +
+  theme(legend.position = "none",
+        plot.margin = margin(t = 5, r = 5, b = 5, l = 40))
+
+ggsave(fig_owl_site_history,
+       filename = here("docs",
+                       "figures",
+                       "fig_owl_site_history.png"),
+       width = 12,
+       height = 4,
+       units = "cm",
+       dpi = 300)
