@@ -304,9 +304,17 @@ editor: visual
 
     -   [x] Re-access the audio numbers
 
-## Oct.29
+## Nov.18
 
--   
+-   Finished updating manuscript
+
+-   Temporal validation
+
+-   Cross validation
+
+-   Methods and Results
+
+-   Figures update
 
 ## Big Picture
 
